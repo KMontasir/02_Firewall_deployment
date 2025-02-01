@@ -25,12 +25,34 @@ NETWORK_CONFIGS=(
   "vmbr2,vmbr3,vmbr4"   # 3ème firewall
 )
 
+# Vérification et création du stockage snippets si nécessaire
+SNIPPET_STORAGE="local"  # Modifier si les snippets sont stockés ailleurs
+if ! pvesm status | grep -q "$SNIPPET_STORAGE"; then
+    echo "Erreur: Le stockage '$SNIPPET_STORAGE' n'existe pas dans Proxmox."
+    exit 1
+fi
+
+# Fonction pour ajouter un fichier Cloud-init en tant que snippet
+add_cloudinit_snippet() {
+    local file_path=$1
+    local snippet_name=$(basename "$file_path")
+
+    if [ ! -f "$file_path" ]; then
+        echo "Erreur: Le fichier Cloud-init $file_path n'existe pas."
+        exit 1
+    fi
+
+    echo "Ajout du fichier Cloud-init $file_path en tant que snippet..."
+    cp "$file_path" "/var/lib/vz/snippets/$snippet_name"
+    chmod 644 "/var/lib/vz/snippets/$snippet_name"
+}
+
 # Fonction pour cloner une VM
 clone_vm() {
     local vm_id=$1
     local name=$2
-    local template_name=$3
-    local network_config=$4
+    local template_name="freebsd-14-cloudinit"  # Nom du template corrigé
+    local network_config=$3
     echo "Clonage de la VM $name à partir du template $template_name"
 
     # Vérifier si la VM existe déjà, la supprimer si nécessaire
@@ -38,6 +60,7 @@ clone_vm() {
         echo "La VM $vm_id existe déjà, suppression en cours..."
         qm stop "$vm_id" --skiplock
         qm destroy "$vm_id" --destroy-unreferenced-disks 1
+        qm wait "$vm_id"
     fi
 
     # Cloner la VM à partir du template
@@ -49,48 +72,47 @@ clone_vm() {
     # Configurer le disque dur
     qm set "$vm_id" --scsi0 "${STORAGE_POOL}:vm-${vm_id}-disk-0,iothread=1,backup=off"
 
-    # Supprimer l'ancien disque CloudInit avant d'en ajouter un nouveau
-    qm set "$vm_id" --delete ide2
-    qm set "$vm_id" --ide2 "$CLOUDINIT_DISK,media=cdrom"
-
     # Configurer les cartes réseau en fonction du réseau spécifique
     IFS=',' read -r -a networks <<< "$network_config"
     qm set "$vm_id" --net0 virtio,bridge="${networks[0]},firewall=1"
     qm set "$vm_id" --net1 virtio,bridge="${networks[1]},firewall=1"
     qm set "$vm_id" --net2 virtio,bridge="${networks[2]},firewall=1"
 
-    # Activer CloudInit et définir les paramètres de base
+    # Activer CloudInit
+    qm set "$vm_id" --ide2 "$CLOUDINIT_DISK,media=cdrom"
     qm set "$vm_id" --ciuser root --cipassword "your_password" --searchdomain local --nameserver 8.8.8.8
 
     # Démarrer la VM clonée
     qm start "$vm_id"
     echo "VM $name clonée et démarrée."
+    sleep 5  # Attendre que la VM démarre pour appliquer Cloud-init
 }
 
 # Fonction pour appliquer un fichier Cloud-init spécifique
 apply_cloudinit() {
     local vm_id=$1
     local cloudinit_file=$2
+    local snippet_name=$(basename "$cloudinit_file")
 
     echo "Application du fichier Cloud-init pour la VM $vm_id"
 
-    # Vérifier que le fichier Cloud-init existe
-    if [ ! -f "$cloudinit_file" ]; then
-        echo "Erreur: Le fichier Cloud-init $cloudinit_file n'existe pas."
-        exit 1
-    fi
+    # Vérifier et ajouter le fichier Cloud-init en tant que snippet
+    add_cloudinit_snippet "$cloudinit_file"
 
-    # Copier le fichier Cloud-init sur la VM
-    qm set "$vm_id" --ide2 "$cloudinit_file,media=cdrom"
+    # Associer le fichier Cloud-init à la VM
+    qm set "$vm_id" --cicustom "user=local:snippets/$snippet_name"
 
-    # Appliquer la configuration Cloud-init
+    # Redémarrer la VM pour appliquer Cloud-init
+    qm stop "$vm_id"
+    sleep 2
     qm start "$vm_id"
+
     echo "Cloud-init appliqué à la VM $vm_id."
 }
 
 # Création des VMs OPNsense en clonant le template et en appliquant Cloud-init
 for i in "${!OPNSENSE_VMS[@]}"; do
-    clone_vm "${VM_IDS[$i]}" "${OPNSENSE_VMS[$i]}" "freebsd.template" "${NETWORK_CONFIGS[$i]}"
+    clone_vm "${VM_IDS[$i]}" "${OPNSENSE_VMS[$i]}" "${NETWORK_CONFIGS[$i]}"
     apply_cloudinit "${VM_IDS[$i]}" "${CLOUDINIT_FILES[$i]}"
 done
 
