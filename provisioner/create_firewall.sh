@@ -30,12 +30,12 @@ NETWORK_CONFIGS=(
 clone_vm() {
     local vm_id=$1
     local name=$2
-    local template_id=$3
+    local template_name=$3
     local network_config=$4
-    echo "Clonage de la VM $name à partir du template $template_id"
+    echo "Clonage de la VM $name à partir du template $template_name"
     
-    # Cloner la VM à partir du template (en utilisant l'ID du template)
-    qm clone "$template_id" "$vm_id" --name "$name" --full --storage "$STORAGE_POOL"
+    # Cloner la VM à partir du template
+    qm clone "$template_name" "$vm_id" --name "$name" --full --storage "$STORAGE_POOL"
     
     # Configurer les ressources de la VM (CPU, RAM, etc.)
     qm set "$vm_id" --cpu host --cores "$CORES" --memory "$MEMORY"
@@ -68,13 +68,13 @@ apply_cloudinit() {
     # Vérifier que le fichier Cloud-init existe
     if [ ! -f "$cloudinit_file" ]; then
         echo "Erreur: Le fichier Cloud-init $cloudinit_file n'existe pas."
-        return 1  # Retourne une erreur si le fichier n'existe pas
+        exit 1
     fi
 
-    # Appliquer Cloud-init
+    # Copier le fichier Cloud-init sur la VM
     qm set "$vm_id" --ide2 "$cloudinit_file,media=cdrom"
     
-    # Démarrer la VM après l'application du Cloud-init
+    # Appliquer la configuration Cloud-init
     qm start "$vm_id"
     echo "Cloud-init appliqué à la VM $vm_id."
 }
