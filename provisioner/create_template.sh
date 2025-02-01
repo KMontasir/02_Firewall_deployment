@@ -31,8 +31,11 @@ create_template() {
     # Créer la machine virtuelle (id de la VM, nom, réseau, etc.)
     qm create "$id" --name "$name" --net0 virtio,bridge="$BRIDGE" --scsihw virtio-scsi-single
     
-    # Ajouter le disque virtuel en utilisant l'image téléchargée
-    qm set "$id" --scsi0 "${STORAGE_POOL}:0,iothread=1,backup=off,format=qcow2,import-from=${TEMPLATE_DIR}/${name}/${img_file}"
+    # Importer l'image dans le stockage local
+    qm importdisk "$id" "${TEMPLATE_DIR}/${name}/${img_file}" "$STORAGE_POOL"
+    
+    # Lier le disque importé à la VM
+    qm set "$id" --scsi0 "${STORAGE_POOL}:vm-${id}-disk-0"
     
     # Redimensionner le disque
     qm disk resize "$id" scsi0 "$DISK_SIZE"
