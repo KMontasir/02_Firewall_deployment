@@ -3,7 +3,7 @@
 # Variables communes
 TEMPLATE_DIR="/root/02_Firewall_deployment/cloud_init/cloud-version"
 STORAGE_POOL="local-lvm"
-SNIPPET_STORAGE="local"  # Modifier si nécessaire
+SNIPPET_STORAGE="snippets-storage"  # Modifier si nécessaire
 CORES=2
 MEMORY=2048
 DISK_SIZE="20G"
