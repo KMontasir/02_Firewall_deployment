@@ -13,9 +13,9 @@ VM_IDS=(1001 1002 1003)
 
 # Chemins vers les fichiers Cloud-init spécifiques
 CLOUDINIT_FILES=(
-  "./cloud_init/cloud-init-firewall-1.yml"
-  "./cloud_init/cloud-init-firewall-2.yml"
-  "./cloud_init/cloud-init-firewall-3.yml"
+  "/root/02_Firewall_deployment/cloud_init/cloud-init-firewall-1.yml"
+  "/root/02_Firewall_deployment/cloud_init/cloud-init-firewall-2.yml"
+  "/root/02_Firewall_deployment/cloud_init/cloud-init-firewall-3.yml"
 )
 
 # Configuration des interfaces réseau pour chaque VM
