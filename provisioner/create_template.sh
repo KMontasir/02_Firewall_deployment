@@ -1,6 +1,6 @@
 #!/bin/bash
 # Variables communes
-TEMPLATE_DIR="/root/cloud-version"
+TEMPLATE_DIR="./cloud-version"
 STORAGE_POOL="local-lvm"
 BRIDGE="vmbr0"
 CORES=2
