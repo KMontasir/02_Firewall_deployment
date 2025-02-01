@@ -1,6 +1,6 @@
 #!/bin/bash
 # Variables communes
-TEMPLATE_DIR="/root/cloud-version"
+TEMPLATE_DIR="./cloud-version"
 STORAGE_POOL="local-lvm"
 CORES=2
 MEMORY=2048
@@ -14,9 +14,9 @@ VM_IDS=(1001 1002 1003)
 
 # Chemins vers les fichiers Cloud-init spécifiques
 CLOUDINIT_FILES=(
-  "/root/cloud_init/cloud-init-firewall-1.yml"
-  "/root/cloud_init/cloud-init-firewall-2.yml"
-  "/root/cloud_init/cloud-init-firewall-3.yml"
+  "./cloud_init/cloud-init-firewall-1.yml"
+  "./cloud_init/cloud-init-firewall-2.yml"
+  "./cloud_init/cloud-init-firewall-3.yml"
 )
 
 # Configuration des interfaces réseau pour chaque VM
