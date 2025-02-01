@@ -9,7 +9,6 @@ CLOUDINIT_DISK="${STORAGE_POOL}:cloudinit"
 
 # Variables pour les VMs OPNsense
 OPNSENSE_VMS=("opnsense1" "opnsense2" "opnsense3")
-OPNSENSE_HOSTNAMES=("opnsense1.local" "opnsense2.local" "opnsense3.local")
 VM_IDS=(1001 1002 1003)
 
 # Chemins vers les fichiers Cloud-init spécifiques
@@ -33,26 +32,36 @@ clone_vm() {
     local template_name=$3
     local network_config=$4
     echo "Clonage de la VM $name à partir du template $template_name"
-    
+
+    # Vérifier si la VM existe déjà, la supprimer si nécessaire
+    if qm status "$vm_id" &>/dev/null; then
+        echo "La VM $vm_id existe déjà, suppression en cours..."
+        qm stop "$vm_id" --skiplock
+        qm destroy "$vm_id" --destroy-unreferenced-disks 1
+    fi
+
     # Cloner la VM à partir du template
-    qm clone "$template_name" "$vm_id" --name "$name" --full --storage "$STORAGE_POOL"
-    
+    qm clone 9999 "$vm_id" --name "$name" --full --storage "$STORAGE_POOL"
+
     # Configurer les ressources de la VM (CPU, RAM, etc.)
     qm set "$vm_id" --cpu host --cores "$CORES" --memory "$MEMORY"
-    
-    # Configurer le disque dur et l'ajout de Cloud-init
-    qm set "$vm_id" --scsi0 "${STORAGE_POOL}:0,iothread=1,backup=off,format=qcow2"
+
+    # Configurer le disque dur
+    qm set "$vm_id" --scsi0 "${STORAGE_POOL}:vm-${vm_id}-disk-0,iothread=1,backup=off"
+
+    # Supprimer l'ancien disque CloudInit avant d'en ajouter un nouveau
+    qm set "$vm_id" --delete ide2
     qm set "$vm_id" --ide2 "$CLOUDINIT_DISK,media=cdrom"
-    
+
     # Configurer les cartes réseau en fonction du réseau spécifique
     IFS=',' read -r -a networks <<< "$network_config"
-    qm set "$vm_id" --net0 virtio,bridge="${networks[0]}"
-    qm set "$vm_id" --net1 virtio,bridge="${networks[1]}"
-    qm set "$vm_id" --net2 virtio,bridge="${networks[2]}"
-    
-    # Configurer le hostname
-    qm set "$vm_id" --hostname "$name"
-    
+    qm set "$vm_id" --net0 virtio,bridge="${networks[0]},firewall=1"
+    qm set "$vm_id" --net1 virtio,bridge="${networks[1]},firewall=1"
+    qm set "$vm_id" --net2 virtio,bridge="${networks[2]},firewall=1"
+
+    # Activer CloudInit et définir les paramètres de base
+    qm set "$vm_id" --ciuser root --cipassword "your_password" --searchdomain local --nameserver 8.8.8.8
+
     # Démarrer la VM clonée
     qm start "$vm_id"
     echo "VM $name clonée et démarrée."
@@ -62,7 +71,7 @@ clone_vm() {
 apply_cloudinit() {
     local vm_id=$1
     local cloudinit_file=$2
-    
+
     echo "Application du fichier Cloud-init pour la VM $vm_id"
 
     # Vérifier que le fichier Cloud-init existe
@@ -73,7 +82,7 @@ apply_cloudinit() {
 
     # Copier le fichier Cloud-init sur la VM
     qm set "$vm_id" --ide2 "$cloudinit_file,media=cdrom"
-    
+
     # Appliquer la configuration Cloud-init
     qm start "$vm_id"
     echo "Cloud-init appliqué à la VM $vm_id."
