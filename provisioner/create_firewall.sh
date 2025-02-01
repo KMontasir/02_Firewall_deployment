@@ -1,7 +1,9 @@
 #!/bin/bash
+
 # Variables communes
 TEMPLATE_DIR="/root/02_Firewall_deployment/cloud_init/cloud-version"
 STORAGE_POOL="local-lvm"
+SNIPPET_STORAGE="local"  # Modifier si nécessaire
 CORES=2
 MEMORY=2048
 DISK_SIZE="20G"
@@ -26,10 +28,17 @@ NETWORK_CONFIGS=(
 )
 
 # Vérification et création du stockage snippets si nécessaire
-SNIPPET_STORAGE="local"  # Modifier si les snippets sont stockés ailleurs
 if ! pvesm status | grep -q "$SNIPPET_STORAGE"; then
-    echo "Erreur: Le stockage '$SNIPPET_STORAGE' n'existe pas dans Proxmox."
-    exit 1
+    echo "Création du stockage '$SNIPPET_STORAGE' pour les snippets..."
+    pvesm add dir "$SNIPPET_STORAGE" --path /var/lib/vz --content snippets
+fi
+
+# Vérification et création du dossier snippets si nécessaire
+SNIPPET_PATH="/var/lib/vz/snippets"
+if [ ! -d "$SNIPPET_PATH" ]; then
+    echo "Création du répertoire snippets..."
+    mkdir -p "$SNIPPET_PATH"
+    chmod 755 "$SNIPPET_PATH"
 fi
 
 # Fonction pour ajouter un fichier Cloud-init en tant que snippet
@@ -43,17 +52,18 @@ add_cloudinit_snippet() {
     fi
 
     echo "Ajout du fichier Cloud-init $file_path en tant que snippet..."
-    cp "$file_path" "/var/lib/vz/snippets/$snippet_name"
-    chmod 644 "/var/lib/vz/snippets/$snippet_name"
+    cp "$file_path" "$SNIPPET_PATH/$snippet_name"
+    chmod 644 "$SNIPPET_PATH/$snippet_name"
 }
 
 # Fonction pour cloner une VM
 clone_vm() {
     local vm_id=$1
     local name=$2
-    local template_name="freebsd-14-cloudinit"  # Nom du template corrigé
     local network_config=$3
-    echo "Clonage de la VM $name à partir du template $template_name"
+    local template_id=9999  # ID du template à cloner
+
+    echo "Clonage de la VM $name à partir du template ID $template_id"
 
     # Vérifier si la VM existe déjà, la supprimer si nécessaire
     if qm status "$vm_id" &>/dev/null; then
@@ -64,7 +74,7 @@ clone_vm() {
     fi
 
     # Cloner la VM à partir du template
-    qm clone 9999 "$vm_id" --name "$name" --full --storage "$STORAGE_POOL"
+    qm clone "$template_id" "$vm_id" --name "$name" --full --storage "$STORAGE_POOL"
 
     # Configurer les ressources de la VM (CPU, RAM, etc.)
     qm set "$vm_id" --cpu host --cores "$CORES" --memory "$MEMORY"
@@ -100,7 +110,7 @@ apply_cloudinit() {
     add_cloudinit_snippet "$cloudinit_file"
 
     # Associer le fichier Cloud-init à la VM
-    qm set "$vm_id" --cicustom "user=local:snippets/$snippet_name"
+    qm set "$vm_id" --cicustom "user=$SNIPPET_STORAGE:snippets/$snippet_name"
 
     # Redémarrer la VM pour appliquer Cloud-init
     qm stop "$vm_id"
