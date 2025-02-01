@@ -1,0 +1,88 @@
+#!/bin/bash
+# Variables communes
+TEMPLATE_DIR="/root/cloud-version"
+STORAGE_POOL="local-lvm"
+CORES=2
+MEMORY=2048
+DISK_SIZE="20G"
+CLOUDINIT_DISK="${STORAGE_POOL}:cloudinit"
+
+# Variables pour les VMs OPNsense
+OPNSENSE_VMS=("opnsense1" "opnsense2" "opnsense3")
+OPNSENSE_HOSTNAMES=("opnsense1.local" "opnsense2.local" "opnsense3.local")
+VM_IDS=(1001 1002 1003)
+
+# Chemins vers les fichiers Cloud-init spécifiques
+CLOUDINIT_FILES=(
+  "/root/cloud_init/cloud-init-firewall-1.yml"
+  "/root/cloud_init/cloud-init-firewall-2.yml"
+  "/root/cloud_init/cloud-init-firewall-3.yml"
+)
+
+# Configuration des interfaces réseau pour chaque VM
+NETWORK_CONFIGS=(
+  "vmbr0,vmbr1,vmbr4"   # 1er firewall
+  "vmbr1,vmbr2,vmbr4"   # 2ème firewall
+  "vmbr2,vmbr3,vmbr4"   # 3ème firewall
+)
+
+# Fonction pour cloner une VM
+clone_vm() {
+    local vm_id=$1
+    local name=$2
+    local template_name=$3
+    local network_config=$4
+    echo "Clonage de la VM $name à partir du template $template_name"
+    
+    # Cloner la VM à partir du template
+    qm clone "$template_name" "$vm_id" --name "$name" --full --storage "$STORAGE_POOL"
+    
+    # Configurer les ressources de la VM (CPU, RAM, etc.)
+    qm set "$vm_id" --cpu host --cores "$CORES" --memory "$MEMORY"
+    
+    # Configurer le disque dur et l'ajout de Cloud-init
+    qm set "$vm_id" --scsi0 "${STORAGE_POOL}:0,iothread=1,backup=off,format=qcow2"
+    qm set "$vm_id" --ide2 "$CLOUDINIT_DISK"
+    
+    # Configurer les cartes réseau en fonction du réseau spécifique
+    IFS=',' read -r -a networks <<< "$network_config"
+    qm set "$vm_id" --net0 virtio,bridge="${networks[0]}"
+    qm set "$vm_id" --net1 virtio,bridge="${networks[1]}"
+    qm set "$vm_id" --net2 virtio,bridge="${networks[2]}"
+    
+    # Configurer le hostname
+    qm set "$vm_id" --hostname "$name"
+    
+    # Démarrer la VM clonée
+    qm start "$vm_id"
+    echo "VM $name clonée et démarrée."
+}
+
+# Fonction pour appliquer un fichier Cloud-init spécifique
+apply_cloudinit() {
+    local vm_id=$1
+    local cloudinit_file=$2
+    
+    echo "Application du fichier Cloud-init pour la VM $vm_id"
+
+    # Vérifier que le fichier Cloud-init existe
+    if [ ! -f "$cloudinit_file" ]; then
+        echo "Erreur: Le fichier Cloud-init $cloudinit_file n'existe pas."
+        exit 1
+    fi
+
+    # Copier le fichier Cloud-init sur la VM
+    qm set "$vm_id" --ide2 "$cloudinit_file,media=cdrom"
+    
+    # Appliquer la configuration Cloud-init
+    qm start "$vm_id"
+    echo "Cloud-init appliqué à la VM $vm_id."
+}
+
+# Création des VMs OPNsense en clonant le template et en appliquant Cloud-init
+for i in "${!OPNSENSE_VMS[@]}"; do
+    clone_vm "${VM_IDS[$i]}" "${OPNSENSE_VMS[$i]}" "freebsd.template" "${NETWORK_CONFIGS[$i]}"
+    apply_cloudinit "${VM_IDS[$i]}" "${CLOUDINIT_FILES[$i]}"
+done
+
+echo "Toutes les VMs OPNsense ont été clonées et configurées avec Cloud-init."
