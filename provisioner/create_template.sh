@@ -7,7 +7,7 @@ BRIDGE="vmbr0"
 CORES=2
 MEMORY=2048
 DISK_SIZE="10G"
-CLOUDINIT_DISK="local:cloudinit"  # Le stockage CloudInit reste sur 'local'
+CLOUDINIT_DISK="local:cloudinit"
 IMAGE_URL="https://download.freebsd.org/releases/VM-IMAGES/14.1-RELEASE/amd64/Latest/FreeBSD-14.1-RELEASE-amd64-BASIC-CLOUDINIT-zfs.qcow2.xz"
 SNIPPETS_DIR="/var/lib/vz/snippets"
 
@@ -21,7 +21,7 @@ create_template() {
     local name=$2
     local url=$3
     local img_file=$(basename "$url")
-    local img_uncompressed="${img_file%.xz}"  # Supprime l'extension .xz
+    local img_uncompressed="${img_file%.xz}"
 
     # Vérifier si la VM existe déjà
     if qm list | awk '{print $1}' | grep -q "^$id$"; then
