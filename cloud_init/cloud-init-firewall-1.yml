@@ -1,24 +1,28 @@
 #cloud-config
 hostname: "firewall-relais"
+
 write_files:
   - path: /etc/rc.conf
     content: |
-      # Interfaces configuration
-      ifconfig_vtnet0="DHCP" # WAN (vmbr0)
-      ifconfig_vtnet1="inet 172.16.1.6 netmask 255.255.255.0" # LAN (vmbr1)
+      # Configuration des interfaces réseau
+      ifconfig_vtnet0="up"
+      ifconfig_vtnet0="DHCP"  # WAN (vmbr0)
+      ifconfig_vtnet1="up"
+      ifconfig_vtnet1="inet 172.16.1.6 netmask 255.255.255.0"  # LAN (vmbr1)
+      ifconfig_vtnet2="up"
       vlan50="vlan 50 vlandev vtnet2"
-      ifconfig_vlan50="inet 172.16.50.14 netmask 255.255.255.240" # VLAN 50 (OPT1 vmbr4)
+      ifconfig_vlan50="inet 172.16.50.14 netmask 255.255.255.240"  # VLAN 50 (OPT1 vmbr4)
       vlan60="vlan 60 vlandev vtnet2"
-      ifconfig_vlan60="inet 172.16.60.14 netmask 255.255.255.240" # VLAN 60 (OPT1 vmbr4)
+      ifconfig_vlan60="inet 172.16.60.14 netmask 255.255.255.240"  # VLAN 60 (OPT1 vmbr4)
 
-      # Enable NAT
+      # Activer NAT
       gateway_enable="YES"
       pf_enable="YES"
       echo "nat on vtnet0 from 172.16.1.0/24 to any -> (vtnet0)" >> /etc/pf.conf
       echo "nat on vtnet0 from 172.16.50.0/28 to any -> (vtnet0)" >> /etc/pf.conf
       echo "nat on vtnet0 from 172.16.60.0/28 to any -> (vtnet0)" >> /etc/pf.conf
 
-      # Firewall rules
+      # Règles du pare-feu
       echo "pass in on vtnet1 from 172.16.1.0/24 to any" >> /etc/pf.conf
       echo "pass in on vlan50 from 172.16.50.0/28 to any" >> /etc/pf.conf
       echo "pass in on vlan60 from 172.16.60.0/28 to any" >> /etc/pf.conf
@@ -37,18 +41,21 @@ write_files:
 runcmd:
   # Mettre à jour le système avant l'installation
   - "pkg update -f"
-  
-  # Ajouter le dépôt d'OPNsense
-  - "echo 'OPNsense repository configuration' >> /usr/local/etc/pkg/repos/OPNsense.conf"
-  - "echo 'OPNsense: { url: "http://pkg.opnsense.org/freebsd/$(uname -r)/amd64/latest", enabled: yes }' >> /usr/local/etc/pkg/repos/OPNsense.conf"
 
-  # Installer OPNsense depuis le dépôt officiel
-  - "pkg install -y opnsense"
+  # Télécharger le script d'install OPNsense
+  - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in"
+
+  # Exécuter le script d'install OPNsense
+  - "sh ./opnsense-bootstrap.sh.in -r 25.1"
+
+  # Ajouter le dépôt OPNsense (si nécessaire)
+  - "echo 'OPNsense repository configuration' >> /usr/local/etc/pkg/repos/OPNsense.conf"
+  - "echo 'OPNsense: { url: \"http://pkg.opnsense.org/freebsd/$(uname -r)/amd64/latest\", enabled: yes }' >> /usr/local/etc/pkg/repos/OPNsense.conf"
 
   # Activer le pare-feu et démarrer le service
   - "sysrc firewall_enable=YES"
   - "sysrc pf_enable=YES"
   - "service pf start"
 
-  # Reboot pour appliquer les changements
+  # Redémarrer pour appliquer les changements
   - "reboot"
