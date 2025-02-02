@@ -15,14 +15,14 @@ OPNSENSE_VMS=("opnsense1" "opnsense2" "opnsense3")
 VM_IDS=(1001 1002 1003)
 
 # Chemins vers les fichiers Cloud-init spécifiques
-CLOUDINIT_FILES=(
+CLOUDINIT_FILES=( 
   "/root/02_Firewall_deployment/cloud_init/cloud-init-firewall-1.yml"
   "/root/02_Firewall_deployment/cloud_init/cloud-init-firewall-2.yml"
   "/root/02_Firewall_deployment/cloud_init/cloud-init-firewall-3.yml"
 )
 
 # Configuration des interfaces réseau pour chaque VM
-NETWORK_CONFIGS=(
+NETWORK_CONFIGS=( 
   "vmbr0,vmbr1,vmbr4"
   "vmbr1,vmbr2,vmbr4"
   "vmbr2,vmbr3,vmbr4"
@@ -37,11 +37,11 @@ fi
 # Vérification et création du stockage snippets si nécessaire
 if ! pvesm status | grep -q "$SNIPPET_STORAGE"; then
     echo "Création du stockage '$SNIPPET_STORAGE' pour les snippets..."
-    pvesm add dir "$SNIPPET_STORAGE" --path /var/lib/vz --content snippets
+    pvesm add dir "$SNIPPET_STORAGE" --path /var/lib/vz/snippets --content snippets
 fi
 
 # Vérification et création du dossier snippets si nécessaire
-SNIPPET_PATH="/var/lib/vz/snippets"
+SNIPPET_PATH="/var/lib/vz/snippets/snippets"  # Correction ici pour pointer vers le bon sous-dossier
 mkdir -p "$SNIPPET_PATH"
 chmod 755 "$SNIPPET_PATH"
 
@@ -115,7 +115,7 @@ apply_cloudinit() {
     add_cloudinit_snippet "$cloudinit_file"
 
     # Associer le fichier Cloud-init à la VM
-    qm set "$vm_id" --cicustom "user=$SNIPPET_STORAGE:snippets/$snippet_name"
+    qm set "$vm_id" --cicustom "user=$SNIPPET_STORAGE:snippets/snippets/$snippet_name"
 
     # Redémarrer la VM pour appliquer Cloud-init
     qm stop "$vm_id"
