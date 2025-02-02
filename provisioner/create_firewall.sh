@@ -114,8 +114,8 @@ apply_cloudinit() {
     # Ajouter le fichier Cloud-init en tant que snippet
     add_cloudinit_snippet "$cloudinit_file"
 
-    # Associer TOUS les fichiers Cloud-init à la VM
-    qm set "$vm_id" --cicustom "user=$SNIPPET_STORAGE:snippets/$snippet_name,network=$SNIPPET_STORAGE:snippets/network-config,meta=$SNIPPET_STORAGE:snippets/meta-data"
+    # Associer le fichier Cloud-init à la VM
+    qm set "$vm_id" --cicustom "user=$SNIPPET_STORAGE:snippets/$snippet_name"
 
     # Redémarrer la VM pour appliquer Cloud-init
     qm stop "$vm_id"
