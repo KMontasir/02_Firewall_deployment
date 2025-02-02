@@ -10,7 +10,13 @@ MEMORY=2048
 DISK_SIZE="10G"
 CLOUDINIT_DISK="local:cloudinit"  # Le stockage CloudInit reste sur 'local'
 IMAGE_URL="https://download.freebsd.org/releases/VM-IMAGES/14.1-RELEASE/amd64/Latest/FreeBSD-14.1-RELEASE-amd64-BASIC-CLOUDINIT-zfs.qcow2.xz"
-SNIPPETS_DIR="/var/lib/vz/snippets"
+SNIPPETS_DIR="/var/lib/vz/snippets"  # Répertoire des snippets, mais nous allons configurer sans les fichiers manquants
+
+# Vérifier que le répertoire des snippets existe
+if [ ! -d "$SNIPPETS_DIR" ]; then
+    echo "Erreur : Le répertoire des snippets ($SNIPPETS_DIR) n'existe pas."
+    exit 1
+fi
 
 # Fonction pour créer le template et l'ajouter au pool "template"
 create_template() {
@@ -64,6 +70,7 @@ create_template() {
     qm set "$id" --cpu host --cores "$CORES" --memory "$MEMORY"
 
     # Ajouter le disque CloudInit pour la configuration
+    # Nous utilisons un disque Cloud-init par défaut, pas de besoin d'un fichier user-data
     qm set "$id" --ide2 "$CLOUDINIT_DISK"
 
     # Activer l'agent QEMU (important pour CloudInit)
@@ -71,9 +78,6 @@ create_template() {
 
     # Activer l'UEFI si nécessaire (FreeBSD peut en avoir besoin)
     qm set "$id" --bios ovmf --efidisk0 "$STORAGE_POOL:vm-${id}-efidisk,format=raw,efitype=4m"
-
-    # Appliquer les fichiers Cloud-init depuis les snippets
-    qm set "$id" --cicustom "user=snippets:snippets/user-data,network=snippets:snippets/network-config,meta=snippets:snippets/meta-data"
 
     # Marquer cette VM comme un template
     qm template "$id"  # Conversion de la VM en template
