@@ -2,12 +2,12 @@
 
 # Variables communes
 TEMPLATE_DIR="/root/02_Firewall_deployment/cloud_init/cloud-version"
-STORAGE_POOL="local-lvm"
-SNIPPET_STORAGE="snippets-storage"  # Modifier si nécessaire
+VM_STORAGE="local-lvm-vm"  # Stockage des VMs sur "local-lvm-vm"
+SNIPPET_STORAGE="local"    # Stockage des fichiers Cloud-init sur "local"
 CORES=2
 MEMORY=2048
 DISK_SIZE="20G"
-CLOUDINIT_DISK="${STORAGE_POOL}:cloudinit"
+CLOUDINIT_DISK="${SNIPPET_STORAGE}:cloudinit"  # Cloud-init sur "local"
 
 # Variables pour les VMs OPNsense
 OPNSENSE_VMS=("opnsense1" "opnsense2" "opnsense3")
@@ -74,13 +74,13 @@ clone_vm() {
     fi
 
     # Cloner la VM à partir du template
-    qm clone "$template_id" "$vm_id" --name "$name" --full --storage "$STORAGE_POOL"
+    qm clone "$template_id" "$vm_id" --name "$name" --full --storage "$VM_STORAGE"  # Utiliser "local-lvm-vm" pour les VMs
 
     # Configurer les ressources de la VM (CPU, RAM, etc.)
     qm set "$vm_id" --cpu host --cores "$CORES" --memory "$MEMORY"
 
     # Configurer le disque dur
-    qm set "$vm_id" --scsi0 "${STORAGE_POOL}:vm-${vm_id}-disk-0,iothread=1,backup=off"
+    qm set "$vm_id" --scsi0 "${VM_STORAGE}:vm-${vm_id}-disk-0,iothread=1,backup=off"  # Utiliser "local-lvm-vm" pour le disque
 
     # Configurer les cartes réseau en fonction du réseau spécifique
     IFS=',' read -r -a networks <<< "$network_config"
@@ -89,7 +89,7 @@ clone_vm() {
     qm set "$vm_id" --net2 virtio,bridge="${networks[2]},firewall=1"
 
     # Activer CloudInit
-    qm set "$vm_id" --ide2 "$CLOUDINIT_DISK,media=cdrom"
+    qm set "$vm_id" --ide2 "$CLOUDINIT_DISK,media=cdrom"  # Utiliser "local" pour Cloud-init
     qm set "$vm_id" --ciuser root --cipassword "your_password" --searchdomain local --nameserver 8.8.8.8
 
     # Démarrer la VM clonée
@@ -110,7 +110,7 @@ apply_cloudinit() {
     add_cloudinit_snippet "$cloudinit_file"
 
     # Associer le fichier Cloud-init à la VM
-    qm set "$vm_id" --cicustom "user=$SNIPPET_STORAGE:snippets/$snippet_name"
+    qm set "$vm_id" --cicustom "user=$SNIPPET_STORAGE:snippets/$snippet_name"  # Utiliser "local" pour les snippets Cloud-init
 
     # Redémarrer la VM pour appliquer Cloud-init
     qm stop "$vm_id"
