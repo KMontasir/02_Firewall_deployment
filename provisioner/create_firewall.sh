@@ -3,7 +3,7 @@
 # Variables communes
 TEMPLATE_ID=9999
 VM_STORAGE="local-lvm-vm"  # Stockage pour les VMs et le template
-SNIPPET_STORAGE="local"  # Stockage des fichiers Cloud-Init
+SNIPPET_STORAGE="snippets"  # Stockage des fichiers Cloud-Init
 POOL_NAME="pare-feu"  # Pool où seront ajoutées les VMs
 CORES=2
 MEMORY=2048
@@ -37,11 +37,11 @@ fi
 # Vérification et création du stockage snippets si nécessaire
 if ! pvesm status | grep -q "$SNIPPET_STORAGE"; then
     echo "Création du stockage '$SNIPPET_STORAGE' pour les snippets..."
-    pvesm add dir "$SNIPPET_STORAGE" --path /var/lib/vz/snippets --content snippets
+    pvesm add dir "$SNIPPET_STORAGE" --path /var/lib/vz --content snippets
 fi
 
 # Vérification et création du dossier snippets si nécessaire
-SNIPPET_PATH="/var/lib/vz/snippets/snippets"  # Correction ici pour pointer vers le bon sous-dossier
+SNIPPET_PATH="/var/lib/vz/snippets"  # Correction ici pour pointer vers le bon sous-dossier
 mkdir -p "$SNIPPET_PATH"
 chmod 755 "$SNIPPET_PATH"
 
@@ -115,7 +115,7 @@ apply_cloudinit() {
     add_cloudinit_snippet "$cloudinit_file"
 
     # Associer le fichier Cloud-init à la VM
-    qm set "$vm_id" --cicustom "user=$SNIPPET_STORAGE:snippets/snippets/$snippet_name"
+    qm set "$vm_id" --cicustom "user=$SNIPPET_STORAGE:snippets/$snippet_name"
 
     # Redémarrer la VM pour appliquer Cloud-init
     qm stop "$vm_id"
