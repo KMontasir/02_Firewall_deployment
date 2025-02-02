@@ -1,27 +1,24 @@
 #!/bin/bash
+
 # Variables communes
 TEMPLATE_DIR="/root/02_Firewall_deployment/cloud_init/cloud-version"
-STORAGE_POOL="local-lvm-vm"
-POOL_TEMPLATE="template"
+STORAGE_POOL="local-lvm-vm"  # Le pool de stockage pour le template
+POOL_TEMPLATE="template"     # Le pool dans lequel la VM doit être ajoutée
 BRIDGE="vmbr0"
 CORES=2
 MEMORY=2048
 DISK_SIZE="10G"
-CLOUDINIT_DISK="local:cloudinit"
+CLOUDINIT_DISK="local:cloudinit"  # Le stockage CloudInit reste sur 'local'
 IMAGE_URL="https://download.freebsd.org/releases/VM-IMAGES/14.1-RELEASE/amd64/Latest/FreeBSD-14.1-RELEASE-amd64-BASIC-CLOUDINIT-zfs.qcow2.xz"
 SNIPPETS_DIR="/var/lib/vz/snippets"
 
-# Création de répertoires et de l'arborescence de travail
-mkdir -p "$TEMPLATE_DIR"
-mkdir -p "$SNIPPETS_DIR"
-
-# Fonction pour créer un template
+# Fonction pour créer le template et l'ajouter au pool "template"
 create_template() {
     local id=$1
     local name=$2
     local url=$3
     local img_file=$(basename "$url")
-    local img_uncompressed="${img_file%.xz}"
+    local img_uncompressed="${img_file%.xz}"  # Supprime l'extension .xz
 
     # Vérifier si la VM existe déjà
     if qm list | awk '{print $1}' | grep -q "^$id$"; then
@@ -79,14 +76,13 @@ create_template() {
     qm set "$id" --cicustom "user=snippets:snippets/user-data,network=snippets:snippets/network-config,meta=snippets:snippets/meta-data"
 
     # Marquer cette VM comme un template
-    qm template "$id"
+    qm template "$id"  # Conversion de la VM en template
 
-    # Déplacer le template dans le pool "template"
-    echo "Déplacement du template dans le pool 'template'..."
-    qm move "$id" "$POOL_TEMPLATE"
+    # Ajouter la VM au pool "template"
+    qm set "$id" --pool "$POOL_TEMPLATE"
 
     cd ..  # Revenir au répertoire précédent
-    echo "Fin de création du template $name"
+    echo "Fin de création du template $name et ajout au pool $POOL_TEMPLATE"
 }
 
 # Création du template avec FreeBSD CloudInit officiel
