@@ -79,7 +79,7 @@ create_template() {
     qm template "$id"  # Conversion de la VM en template
 
     # Ajouter la VM au pool "template"
-    qm set "$id" --pool "$POOL_TEMPLATE"
+    pvesh set /pools/"$POOL_TEMPLATE" -vms "$id"
 
     cd ..  # Revenir au répertoire précédent
     echo "Fin de création du template $name et ajout au pool $POOL_TEMPLATE"
