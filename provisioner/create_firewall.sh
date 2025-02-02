@@ -1,13 +1,14 @@
 #!/bin/bash
 
 # Variables communes
-TEMPLATE_DIR="/root/02_Firewall_deployment/cloud_init/cloud-version"
-VM_STORAGE="local-lvm-vm"  # Stockage des VMs sur "local-lvm-vm"
-SNIPPET_STORAGE="local"    # Stockage des fichiers Cloud-init sur "local"
+TEMPLATE_ID=9999
+VM_STORAGE="local-lvm-vm"  # Stockage pour les VMs et le template
+SNIPPET_STORAGE="local"  # Stockage des fichiers Cloud-Init
+POOL_NAME="pare-feu"  # Pool où seront ajoutées les VMs
 CORES=2
 MEMORY=2048
 DISK_SIZE="20G"
-CLOUDINIT_DISK="${SNIPPET_STORAGE}:cloudinit"  # Cloud-init sur "local"
+CLOUDINIT_DISK="${SNIPPET_STORAGE}:cloudinit"  # Cloud-Init reste sur "local"
 
 # Variables pour les VMs OPNsense
 OPNSENSE_VMS=("opnsense1" "opnsense2" "opnsense3")
@@ -22,10 +23,16 @@ CLOUDINIT_FILES=(
 
 # Configuration des interfaces réseau pour chaque VM
 NETWORK_CONFIGS=(
-  "vmbr0,vmbr1,vmbr4"   # 1er firewall
-  "vmbr1,vmbr2,vmbr4"   # 2ème firewall
-  "vmbr2,vmbr3,vmbr4"   # 3ème firewall
+  "vmbr0,vmbr1,vmbr4"
+  "vmbr1,vmbr2,vmbr4"
+  "vmbr2,vmbr3,vmbr4"
 )
+
+# Vérification et création du pool "pare-feu" si nécessaire
+if ! pvesh get /pools | grep -q "\"$POOL_NAME\""; then
+    echo "Création du pool '$POOL_NAME'..."
+    pvesh create /pools -poolid "$POOL_NAME"
+fi
 
 # Vérification et création du stockage snippets si nécessaire
 if ! pvesm status | grep -q "$SNIPPET_STORAGE"; then
@@ -35,11 +42,8 @@ fi
 
 # Vérification et création du dossier snippets si nécessaire
 SNIPPET_PATH="/var/lib/vz/snippets"
-if [ ! -d "$SNIPPET_PATH" ]; then
-    echo "Création du répertoire snippets..."
-    mkdir -p "$SNIPPET_PATH"
-    chmod 755 "$SNIPPET_PATH"
-fi
+mkdir -p "$SNIPPET_PATH"
+chmod 755 "$SNIPPET_PATH"
 
 # Fonction pour ajouter un fichier Cloud-init en tant que snippet
 add_cloudinit_snippet() {
@@ -56,46 +60,47 @@ add_cloudinit_snippet() {
     chmod 644 "$SNIPPET_PATH/$snippet_name"
 }
 
-# Fonction pour cloner une VM
+# Fonction pour cloner une VM et l'ajouter au pool "pare-feu"
 clone_vm() {
     local vm_id=$1
     local name=$2
     local network_config=$3
-    local template_id=9999  # ID du template à cloner
 
-    echo "Clonage de la VM $name à partir du template ID $template_id"
+    echo "Clonage de la VM $name à partir du template ID $TEMPLATE_ID"
 
     # Vérifier si la VM existe déjà, la supprimer si nécessaire
     if qm status "$vm_id" &>/dev/null; then
         echo "La VM $vm_id existe déjà, suppression en cours..."
         qm stop "$vm_id" --skiplock
+        sleep 2
         qm destroy "$vm_id" --destroy-unreferenced-disks 1
-        qm wait "$vm_id"
     fi
 
     # Cloner la VM à partir du template
-    qm clone "$template_id" "$vm_id" --name "$name" --full --storage "$VM_STORAGE"  # Utiliser "local-lvm-vm" pour les VMs
+    qm clone "$TEMPLATE_ID" "$vm_id" --name "$name" --full --storage "$VM_STORAGE"
 
-    # Configurer les ressources de la VM (CPU, RAM, etc.)
+    # Ajouter la VM au pool "pare-feu"
+    pvesh set /pools/"$POOL_NAME" -vms "$vm_id"
+
+    # Configurer les ressources de la VM
     qm set "$vm_id" --cpu host --cores "$CORES" --memory "$MEMORY"
 
-    # Configurer le disque dur
-    qm set "$vm_id" --scsi0 "${VM_STORAGE}:vm-${vm_id}-disk-0,iothread=1,backup=off"  # Utiliser "local-lvm-vm" pour le disque
+    # Configurer et redimensionner le disque dur
+    qm resize "$vm_id" scsi0 "$DISK_SIZE"
 
-    # Configurer les cartes réseau en fonction du réseau spécifique
+    # Configurer les interfaces réseau
     IFS=',' read -r -a networks <<< "$network_config"
     qm set "$vm_id" --net0 virtio,bridge="${networks[0]},firewall=1"
     qm set "$vm_id" --net1 virtio,bridge="${networks[1]},firewall=1"
     qm set "$vm_id" --net2 virtio,bridge="${networks[2]},firewall=1"
 
     # Activer CloudInit
-    qm set "$vm_id" --ide2 "$CLOUDINIT_DISK,media=cdrom"  # Utiliser "local" pour Cloud-init
-    qm set "$vm_id" --ciuser root --cipassword "your_password" --searchdomain local --nameserver 8.8.8.8
+    qm set "$vm_id" --ide2 "$CLOUDINIT_DISK,media=cdrom"
 
     # Démarrer la VM clonée
     qm start "$vm_id"
-    echo "VM $name clonée et démarrée."
-    sleep 5  # Attendre que la VM démarre pour appliquer Cloud-init
+    echo "VM $name clonée, ajoutée au pool '$POOL_NAME' et démarrée."
+    sleep 5
 }
 
 # Fonction pour appliquer un fichier Cloud-init spécifique
@@ -106,11 +111,11 @@ apply_cloudinit() {
 
     echo "Application du fichier Cloud-init pour la VM $vm_id"
 
-    # Vérifier et ajouter le fichier Cloud-init en tant que snippet
+    # Ajouter le fichier Cloud-init en tant que snippet
     add_cloudinit_snippet "$cloudinit_file"
 
-    # Associer le fichier Cloud-init à la VM
-    qm set "$vm_id" --cicustom "user=$SNIPPET_STORAGE:snippets/$snippet_name"  # Utiliser "local" pour les snippets Cloud-init
+    # Associer TOUS les fichiers Cloud-init à la VM
+    qm set "$vm_id" --cicustom "user=$SNIPPET_STORAGE:snippets/$snippet_name,network=$SNIPPET_STORAGE:snippets/network-config,meta=$SNIPPET_STORAGE:snippets/meta-data"
 
     # Redémarrer la VM pour appliquer Cloud-init
     qm stop "$vm_id"
@@ -120,10 +125,10 @@ apply_cloudinit() {
     echo "Cloud-init appliqué à la VM $vm_id."
 }
 
-# Création des VMs OPNsense en clonant le template et en appliquant Cloud-init
+# Création des VMs OPNsense en clonant le template, ajout au pool "pare-feu" et application de Cloud-init
 for i in "${!OPNSENSE_VMS[@]}"; do
     clone_vm "${VM_IDS[$i]}" "${OPNSENSE_VMS[$i]}" "${NETWORK_CONFIGS[$i]}"
     apply_cloudinit "${VM_IDS[$i]}" "${CLOUDINIT_FILES[$i]}"
 done
 
-echo "Toutes les VMs OPNsense ont été clonées et configurées avec Cloud-init."
+echo "Toutes les VMs OPNsense ont été clonées, ajoutées au pool '$POOL_NAME' et configurées avec Cloud-init."
