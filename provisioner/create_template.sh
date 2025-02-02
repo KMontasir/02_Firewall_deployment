@@ -1,12 +1,13 @@
 #!/bin/bash
 # Variables communes
 TEMPLATE_DIR="/root/02_Firewall_deployment/cloud_init/cloud-version"
-STORAGE_POOL="local-lvm"
+STORAGE_POOL="local-lvm-vm"
+POOL_TEMPLATE="template"
 BRIDGE="vmbr0"
 CORES=2
 MEMORY=2048
 DISK_SIZE="10G"
-CLOUDINIT_DISK="${STORAGE_POOL}:cloudinit"
+CLOUDINIT_DISK="local:cloudinit"  # Le stockage CloudInit reste sur 'local'
 IMAGE_URL="https://download.freebsd.org/releases/VM-IMAGES/14.1-RELEASE/amd64/Latest/FreeBSD-14.1-RELEASE-amd64-BASIC-CLOUDINIT-zfs.qcow2.xz"
 SNIPPETS_DIR="/var/lib/vz/snippets"
 
@@ -37,6 +38,10 @@ create_template() {
     # Télécharger l'image depuis l'URL officielle
     echo "Téléchargement de l'image FreeBSD CloudInit..."
     wget -q --show-progress "$url" -O "$img_file"
+    if [ $? -ne 0 ]; then
+        echo "Erreur : Échec du téléchargement de l’image !"
+        exit 1
+    fi
 
     # Décompression de l'image
     echo "Décompression de l'image..."
@@ -45,7 +50,7 @@ create_template() {
     # Création de la VM sans disque (id de la VM, nom, réseau, etc.)
     qm create "$id" --name "$name" --net0 virtio,bridge="$BRIDGE" --scsihw virtio-scsi-single
 
-    # Importer l'image dans le stockage local
+    # Importer l'image dans le stockage local-lvm-vm
     echo "Importation de l'image disque dans Proxmox..."
     qm importdisk "$id" "${TEMPLATE_DIR}/${name}/${img_uncompressed}" "$STORAGE_POOL"
 
@@ -68,13 +73,17 @@ create_template() {
     qm set "$id" --agent enabled=1
 
     # Activer l'UEFI si nécessaire (FreeBSD peut en avoir besoin)
-    qm set "$id" --bios ovmf --efidisk0 "$STORAGE_POOL:0,format=raw,efitype=4m"
+    qm set "$id" --bios ovmf --efidisk0 "$STORAGE_POOL:vm-${id}-efidisk,format=raw,efitype=4m"
 
     # Appliquer les fichiers Cloud-init depuis les snippets
     qm set "$id" --cicustom "user=snippets:snippets/user-data,network=snippets:snippets/network-config,meta=snippets:snippets/meta-data"
 
     # Marquer cette VM comme un template
     qm template "$id"
+
+    # Déplacer le template dans le pool "template"
+    echo "Déplacement du template dans le pool 'template'..."
+    qm move "$id" "$POOL_TEMPLATE"
 
     cd ..  # Revenir au répertoire précédent
     echo "Fin de création du template $name"
