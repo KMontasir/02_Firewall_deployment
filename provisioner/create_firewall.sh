@@ -21,9 +21,15 @@ CLOUDINIT_FILES=(
   "/root/02_Firewall_deployment/cloud_init/cloud-init-firewall-3.yml"
 )
 
-cp /root/02_Firewall_deployment/cloud_init/cloud-init-firewall-1.yml /var/lib/vz/snippets/
-cp /root/02_Firewall_deployment/cloud_init/cloud-init-firewall-2.yml /var/lib/vz/snippets/
-cp /root/02_Firewall_deployment/cloud_init/cloud-init-firewall-3.yml /var/lib/vz/snippets/
+# Copier les fichiers Cloud-init dans le snippets storage
+for file in "${CLOUDINIT_FILES[@]}"; do
+  if [[ -f "$file" ]]; then
+    cp "$file" "/var/lib/vz/$SNIPPET_STORAGE"
+    echo "Copié : $file -> /var/lib/vz/$SNIPPET_STORAGE"
+  else
+    echo "Avertissement: Le fichier $file n'existe pas."
+  fi
+done
 
 # Configuration des interfaces réseau pour chaque VM
 NETWORK_CONFIGS=( 
