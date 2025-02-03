@@ -21,6 +21,10 @@ CLOUDINIT_FILES=(
   "/root/02_Firewall_deployment/cloud_init/cloud-init-firewall-3.yml"
 )
 
+cp /root/02_Firewall_deployment/cloud_init/cloud-init-firewall-1.yml /var/lib/vz/snippets/
+cp /root/02_Firewall_deployment/cloud_init/cloud-init-firewall-2.yml /var/lib/vz/snippets/
+cp /root/02_Firewall_deployment/cloud_init/cloud-init-firewall-3.yml /var/lib/vz/snippets/
+
 # Configuration des interfaces réseau pour chaque VM
 NETWORK_CONFIGS=( 
   "vmbr0,vmbr1,vmbr4"
