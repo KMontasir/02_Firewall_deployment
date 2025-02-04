@@ -4,10 +4,10 @@ hostname: "firewall-interne"
 users:
   - name: admin
     gecos: "Admin User"
-    sudo: ALL=(ALL) NOPASSWD:ALL
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
     shell: /bin/bash
     lock-passwd: false
-    passwd: "erty"
+    passwd: "$6$b9T6gEnQwVvxM5gV$MIecEzUmOUeJFs4Z/BCKDcbowu0s/0qgVFqLoL3ZEYs18ik6JFBsBXZsXKiu.UuLEKd9VlttjkUh/XSpj90d6/"  # Password --> opnsense
 
 write_files:
   - path: /etc/rc.conf
