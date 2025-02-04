@@ -7,7 +7,7 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
     lock-passwd: false
-    passwd: "$6$randomsalt$hashedpassword"  # Remplacez par un hash sécurisé
+    passwd: "erty"  # Remplacez par un hash sécurisé
 
 write_files:
   - path: /etc/rc.conf
