@@ -7,7 +7,7 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
     lock-passwd: false
-    passwd: "Aerty/123"
+    passwd: "erty"
 
 write_files:
   - path: /etc/rc.conf
