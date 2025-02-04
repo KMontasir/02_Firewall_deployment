@@ -1,5 +1,6 @@
 #cloud-config
 hostname: "firewall-interne"
+
 write_files:
   - path: /etc/rc.conf
     content: |
@@ -17,14 +18,20 @@ write_files:
       vlan20="vlan 20 vlandev vtnet2"
       ifconfig_vlan20="inet 172.16.20.29 netmask 255.255.255.224" # VLAN 20 (OPT1 vmbr4)
 
+      # Passerelles
+      defaultrouter="172.16.30.30"  # Passerelle pour le WAN
+      route_vlan5="172.16.5.253"    # Passerelle pour VLAN 5
+      route_vlan10="172.16.10.253"  # Passerelle pour VLAN 10
+      route_vlan20="172.16.20.30"   # Passerelle pour VLAN 20
+
       # Enable NAT and Firewall
       gateway_enable="YES"
       pf_enable="YES"
 
       # Configuration des routes statiques persistantes
       static_routes="route1 route2 route3"
-      route_route2="-net 172.16.40.0/27 172.16.30.30"
-      route_route3="-net 172.16.50.0/28 172.16.30.30"
+      route_route1="-net 172.16.40.0/27 172.16.30.30"
+      route_route2="-net 172.16.50.0/28 172.16.30.30"
       route_route3="-net 172.16.60.0/28 172.16.30.30"
 
   - path: /etc/pf.conf
