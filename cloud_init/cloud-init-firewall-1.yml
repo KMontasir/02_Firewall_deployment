@@ -7,37 +7,36 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
     lock-passwd: false
-    passwd: "Aerty/123"
+    passwd: "$6$randomsalt$hashedpassword"  # Remplacez par un hash sécurisé
 
 write_files:
   - path: /etc/rc.conf
     content: |
       # Configuration des interfaces réseau
       ifconfig_vtnet0="DHCP"  # WAN (vmbr0)
+      ifconfig_vtnet0_alias0="inet 172.16.0.5 netmask 255.255.255.240"
+      defaultrouter="172.16.0.14"
+      nameserver="10.1.0.1"
+      
       ifconfig_vtnet1="inet 172.16.1.6 netmask 255.255.255.0"  # LAN (vmbr1)
       ifconfig_vtnet2="up"
       
       # VLAN Configuration (OPT1)
-      vlan50="vlan 50 vlandev vtnet2"
-      ifconfig_vlan50="inet 172.16.50.14 netmask 255.255.255.240"  # VLAN 50 (OPT1 vmbr4)
-      vlan60="vlan 60 vlandev vtnet2"
-      ifconfig_vlan60="inet 172.16.60.14 netmask 255.255.255.240"  # VLAN 60 (OPT1 vmbr4)
-
-      # Passerelle pour le WAN (DHCP) et pour VLAN50
-      defaultrouter="DHCP"  # Passerelle par défaut pour WAN via DHCP
-      route_vlan50="172.16.50.13"  # Passerelle spécifique pour le VLAN50
-
+      cloned_interfaces="vlan50 vlan60"
+      ifconfig_vlan50="inet 172.16.50.14 netmask 255.255.255.240 vlan 50 vlandev vtnet2"
+      ifconfig_vlan60="inet 172.16.60.14 netmask 255.255.255.240 vlan 60 vlandev vtnet2"
+      
       # Activer NAT et PF
       gateway_enable="YES"
       pf_enable="YES"
-
+      
       # Configuration des routes statiques persistantes
       static_routes="route1 route2 route3 route4 route5"
-      route_route1="-net 172.16.5.0/24 172.16.50.13"
-      route_route2="-net 172.16.10.0/24 172.16.50.13"
-      route_route3="-net 172.16.20.0/27 172.16.50.13"
-      route_route4="-net 172.16.30.0/27 172.16.50.13"
-      route_route5="-net 172.16.40.0/27 172.16.50.13"
+      route_route1="172.16.5.0/24 172.16.50.13"
+      route_route2="172.16.10.0/24 172.16.50.13"
+      route_route3="172.16.20.0/27 172.16.50.13"
+      route_route4="172.16.30.0/27 172.16.50.13"
+      route_route5="172.16.40.0/27 172.16.50.13"
 
   - path: /etc/pf.conf
     content: |
@@ -46,20 +45,22 @@ write_files:
       
       # Normalisation
       scrub in all
-
+      
       # NAT Configuration
       nat on vtnet0 from 172.16.1.0/24 to any -> (vtnet0)
       nat on vtnet0 from 172.16.50.0/28 to any -> (vtnet0)
       nat on vtnet0 from 172.16.60.0/28 to any -> (vtnet0)
-
+      
       # Firewall Rules
       pass in on vtnet1 from 172.16.1.0/24 to any
       pass in on vlan50 from 172.16.50.0/28 to any
       pass in on vlan60 from 172.16.60.0/28 to any
+      pass out on vtnet0 from any to any
 
   - path: /etc/sysctl.conf
     content: |
       net.inet.ip.forwarding=1
+      net.inet6.ip.forwarding=1  # Activation IPv6 si nécessaire
 
 runcmd:
   # Ajouter les routes statiques immédiatement
@@ -69,23 +70,23 @@ runcmd:
   - "route add -net 172.16.30.0/27 172.16.50.13"
   - "route add -net 172.16.40.0/27 172.16.50.13"
   
+  # Configuration du dépôt OPNsense
+  - "mkdir -p /usr/local/etc/pkg/repos"
+  - "echo 'OPNsense: { url: \"http://pkg.opnsense.org/freebsd/$(uname -r)/amd64/latest\", enabled: yes }' | tee /usr/local/etc/pkg/repos/OPNsense.conf"
+  
   # Mise à jour des paquets
   - "pkg update -f"
-
+  
   # Téléchargement du script d'installation OPNsense
   - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in"
-
+  
   # Exécution du script d'installation d'OPNsense
   - "sh ./opnsense-bootstrap.sh.in -r 25.1"
-
-  # Configuration du dépôt OPNsense (si nécessaire)
-  - "echo 'OPNsense repository configuration' > /usr/local/etc/pkg/repos/OPNsense.conf"
-  - "echo 'OPNsense: { url: \"http://pkg.opnsense.org/freebsd/$(uname -r)/amd64/latest\", enabled: yes }' >> /usr/local/etc/pkg/repos/OPNsense.conf"
-
+  
   # Activation du pare-feu et démarrage du service
   - "sysrc firewall_enable=YES"
   - "sysrc pf_enable=YES"
   - "service pf start"
-
+  
   # Redémarrage pour appliquer les changements
   - "reboot"
