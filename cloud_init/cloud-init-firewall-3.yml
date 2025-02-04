@@ -36,11 +36,22 @@ write_files:
       echo "route add -net 172.16.40.0/27 172.16.5.254" >> /etc/rc.conf
       echo "route add -net 172.16.50.0/28 172.16.5.254" >> /etc/rc.conf
 
+      # Configuration des routes statiques persistantes
+      static_routes="route1 route2 route3"
+      route_route1="-net 172.16.30.0/28 172.16.5.254"
+      route_route2="-net 172.16.40.0/27 172.16.5.254"
+      route_route3="-net 172.16.50.0/28 172.16.5.254"
+
   - path: /etc/sysctl.conf
     content: |
       net.inet.ip.forwarding=1
 
 runcmd:
+  # Ajouter immédiatement les routes statiques
+  - "route add -net 172.16.30.0/28 172.16.5.254"
+  - "route add -net 172.16.40.0/27 172.16.5.254"
+  - "route add -net 172.16.50.0/28 172.16.5.254"
+  
   # Mettre à jour les paquets
   - "pkg update -f"
   
