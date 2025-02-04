@@ -23,11 +23,11 @@ write_files:
 
       # Configuration des routes statiques persistantes
       static_routes="route1 route2 route3 route4 route5"
-      route_route1="-net 172.16.5.0/24 172.16.50.14"
-      route_route2="-net 172.16.10.0/24 172.16.50.14"
-      route_route3="-net 172.16.20.0/28 172.16.50.14"
-      route_route4="-net 172.16.30.0/28 172.16.50.14"
-      route_route5="-net 172.16.40.0/27 172.16.50.14"
+      route_route1="-net 172.16.5.0/24 172.16.50.13"
+      route_route2="-net 172.16.10.0/24 172.16.50.13"
+      route_route3="-net 172.16.20.0/27 172.16.50.13"
+      route_route4="-net 172.16.30.0/27 172.16.50.13"
+      route_route5="-net 172.16.40.0/27 172.16.50.13"
 
   - path: /etc/pf.conf
     content: |
@@ -53,11 +53,11 @@ write_files:
 
 runcmd:
   # Ajouter les routes statiques immédiatement
-  - "route add -net 172.16.5.0/24 172.16.50.14"
-  - "route add -net 172.16.10.0/24 172.16.50.14"
-  - "route add -net 172.16.20.0/28 172.16.50.14"
-  - "route add -net 172.16.30.0/28 172.16.50.14"
-  - "route add -net 172.16.40.0/27 172.16.50.14"
+  - "route add -net 172.16.5.0/24 172.16.50.13"
+  - "route add -net 172.16.10.0/24 172.16.50.13"
+  - "route add -net 172.16.20.0/27 172.16.50.13"
+  - "route add -net 172.16.30.0/27 172.16.50.13"
+  - "route add -net 172.16.40.0/27 172.16.50.13"
   
   # Mise à jour des paquets
   - "pkg update -f"
