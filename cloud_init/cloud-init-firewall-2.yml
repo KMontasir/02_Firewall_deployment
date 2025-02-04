@@ -23,6 +23,13 @@ write_files:
       echo "pass in on vlan30 from 172.16.30.0/28 to any" >> /etc/pf.conf
       echo "pass in on vlan40 from 172.16.40.0/27 to any" >> /etc/pf.conf
 
+      # Configuration des routes statiques persistantes
+      static_routes="route1 route2 route3 route4"
+      route_route1="-net 172.16.5.0/24 172.16.30.14"
+      route_route2="-net 172.16.10.0/24 172.16.30.14"
+      route_route3="-net 172.16.20.0/28 172.16.30.14"
+      route_route4="-net 172.16.50.0/28 172.16.30.14"
+
   - path: /etc/sysctl.conf
     content: |
       net.inet.ip.forwarding=1
