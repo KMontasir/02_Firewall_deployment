@@ -17,6 +17,10 @@ write_files:
       vlan60="vlan 60 vlandev vtnet2"
       ifconfig_vlan60="inet 172.16.60.14 netmask 255.255.255.240"  # VLAN 60 (OPT1 vmbr4)
 
+      # Passerelle pour le WAN (DHCP) et pour VLAN50
+      defaultrouter="DHCP"  # Passerelle par défaut pour WAN via DHCP
+      route_vlan50="172.16.50.13"  # Passerelle spécifique pour le VLAN50
+
       # Activer NAT et PF
       gateway_enable="YES"
       pf_enable="YES"
