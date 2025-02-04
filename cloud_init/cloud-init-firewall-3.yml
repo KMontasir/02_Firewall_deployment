@@ -45,7 +45,7 @@ write_files:
       pass in on vtnet1 from 172.16.1.0/24 to any
       pass in on vlan5 from 172.16.5.0/24 to any
       pass in on vlan10 from 172.16.10.0/24 to any
-      pass in on vlan20 from 172.16.20.0/278 to any
+      pass in on vlan20 from 172.16.20.0/27 to any
 
   - path: /etc/sysctl.conf
     content: |
