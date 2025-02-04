@@ -4,7 +4,7 @@ write_files:
   - path: /etc/rc.conf
     content: |
       # Interfaces configuration
-      ifconfig_vtnet0="inet 172.16.30.1 netmask 255.255.255.0" # WAN (vmbr0)
+      ifconfig_vtnet0="inet 172.16.30.29 netmask 255.255.255.0" # WAN (vmbr0)
       ifconfig_vtnet1="inet 172.16.1.8 netmask 255.255.255.0" # LAN (vmbr1)
       
       # VLAN Configuration (OPT1)
