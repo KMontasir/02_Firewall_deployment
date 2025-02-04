@@ -1,6 +1,14 @@
 #cloud-config
 hostname: "firewall-expose"
 
+users:
+  - name: admin
+    gecos: "Admin User"
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    lock-passwd: false
+    passwd: "Aerty/123"
+
 write_files:
   - path: /etc/rc.conf
     content: |
