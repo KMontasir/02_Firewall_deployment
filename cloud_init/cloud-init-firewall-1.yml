@@ -5,9 +5,7 @@ write_files:
   - path: /etc/rc.conf
     content: |
       # Configuration des interfaces réseau
-      ifconfig_vtnet0="up"
       ifconfig_vtnet0="DHCP"  # WAN (vmbr0)
-      ifconfig_vtnet1="up"
       ifconfig_vtnet1="inet 172.16.1.6 netmask 255.255.255.0"  # LAN (vmbr1)
       ifconfig_vtnet2="up"
       
