@@ -5,7 +5,7 @@ users:
   - name: admin
     gecos: "Admin User"
     sudo: ['ALL=(ALL) NOPASSWD:ALL']
-    shell: /bin/bash
+    shell: /bin/sh
     lock-passwd: false
     passwd: "$6$b9T6gEnQwVvxM5gV$MIecEzUmOUeJFs4Z/BCKDcbowu0s/0qgVFqLoL3ZEYs18ik6JFBsBXZsXKiu.UuLEKd9VlttjkUh/XSpj90d6/"  # Password --> opnsense
 
