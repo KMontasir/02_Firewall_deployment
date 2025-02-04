@@ -7,6 +7,7 @@ write_files:
       # Interfaces configuration
       ifconfig_vtnet0="inet 172.16.50.13 netmask 255.255.255.240" # WAN (vmbr0)
       ifconfig_vtnet1="inet 172.16.1.7 netmask 255.255.255.0" # LAN (vmbr1)
+      ifconfig_vtnet2="up"
       
       # VLAN Configuration (OPT1)
       vlan30="vlan 30 vlandev vtnet2"
