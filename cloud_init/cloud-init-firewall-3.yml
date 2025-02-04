@@ -29,9 +29,9 @@ write_files:
 
       # Passerelles
       defaultrouter="172.16.30.30"  # Passerelle pour le WAN
-      route_vlan5="172.16.5.253"    # Passerelle pour VLAN 5
-      route_vlan10="172.16.10.253"  # Passerelle pour VLAN 10
-      route_vlan20="172.16.20.30"   # Passerelle pour VLAN 20
+      #route_vlan5="172.16.5.253"    # Passerelle pour VLAN 5
+      #route_vlan10="172.16.10.253"  # Passerelle pour VLAN 10
+      #route_vlan20="172.16.20.30"   # Passerelle pour VLAN 20
 
       # Enable NAT and Firewall
       gateway_enable="YES"
