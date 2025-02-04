@@ -1,5 +1,6 @@
 #cloud-config
 hostname: "firewall-expose"
+
 write_files:
   - path: /etc/rc.conf
     content: |
@@ -13,6 +14,10 @@ write_files:
       
       vlan40="vlan 40 vlandev vtnet2"
       ifconfig_vlan40="inet 172.16.40.30 netmask 255.255.255.224" # VLAN 40 (OPT1 vmbr4)
+
+      # Passerelles
+      defaultrouter="172.16.50.13"  # Passerelle pour le WAN (interface vtnet0)
+      route_vlan30="172.16.30.29"   # Passerelle pour le VLAN30
 
       # Enable NAT and Firewall
       gateway_enable="YES"
@@ -48,7 +53,6 @@ write_files:
       net.inet.ip.forwarding=1
 
 runcmd:
-
   # Ajouter immédiatement les routes statiques
   - "route add -net 172.16.5.0/24 172.16.30.29"
   - "route add -net 172.16.10.0/24 172.16.30.29"
