@@ -28,12 +28,12 @@ write_files:
       echo "pass in on vlan60 from 172.16.60.0/28 to any" >> /etc/pf.conf
 
       # Routes
-      echo "route add -net 172.16.5.0/24 172.16.50.14" >> /etc/rc.conf
-      echo "route add -net 172.16.10.0/24 172.16.50.14" >> /etc/rc.conf
-      echo "route add -net 172.16.20.0/28 172.16.50.14" >> /etc/rc.conf
-      echo "route add -net 172.16.30.0/28 172.16.50.14" >> /etc/rc.conf
-      echo "route add -net 172.16.40.0/27 172.16.50.14" >> /etc/rc.conf
-
+      route add -net 172.16.5.0/24 172.16.50.14
+      route add -net 172.16.10.0/24 172.16.50.14
+      route add -net 172.16.20.0/28 172.16.50.14
+      route add -net 172.16.30.0/28 172.16.50.14
+      route add -net 172.16.40.0/27 172.16.50.14
+      
   - path: /etc/sysctl.conf
     content: |
       net.inet.ip.forwarding=1
