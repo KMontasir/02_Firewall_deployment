@@ -23,17 +23,18 @@ write_files:
       echo "pass in on vlan30 from 172.16.30.0/28 to any" >> /etc/pf.conf
       echo "pass in on vlan40 from 172.16.40.0/27 to any" >> /etc/pf.conf
 
-      # Routes
-      echo "route add -net 172.16.5.0/24 172.16.30.14" >> /etc/rc.conf
-      echo "route add -net 172.16.10.0/24 172.16.30.14" >> /etc/rc.conf
-      echo "route add -net 172.16.20.0/28 172.16.30.14" >> /etc/rc.conf
-      echo "route add -net 172.16.50.0/28 172.16.30.14" >> /etc/rc.conf
-
   - path: /etc/sysctl.conf
     content: |
       net.inet.ip.forwarding=1
 
 runcmd:
+
+  # Ajouter les routes statiques
+  - "route add -net 172.16.5.0/24 172.16.30.14"
+  - "route add -net 172.16.10.0/24 172.16.30.14"
+  - "route add -net 172.16.20.0/28 172.16.30.14"
+  - "route add -net 172.16.50.0/28 172.16.30.14"
+  
   # Mettre à jour les paquets
   - "pkg update -f"
   
