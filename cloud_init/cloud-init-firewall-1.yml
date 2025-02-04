@@ -13,8 +13,8 @@ write_files:
   - path: /etc/rc.conf
     content: |
       # Configuration des interfaces réseau
-      ifconfig_vtnet0="DHCP"  # WAN (vmbr0)
-      ifconfig_vtnet0_alias0="inet 172.16.0.5 netmask 255.255.255.240"
+      #ifconfig_vtnet0="DHCP"  # WAN (vmbr0)
+      ifconfig_vtnet0="inet 172.16.0.5 netmask 255.255.255.240"
       defaultrouter="172.16.0.14"
       nameserver="10.1.0.1"
       
