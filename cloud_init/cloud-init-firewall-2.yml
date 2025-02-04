@@ -6,22 +6,17 @@ write_files:
       # Interfaces configuration
       ifconfig_vtnet0="inet 172.16.50.1 netmask 255.255.255.0" # WAN (vmbr0)
       ifconfig_vtnet1="inet 172.16.1.7 netmask 255.255.255.0" # LAN (vmbr1)
+      
+      # VLAN Configuration (OPT1)
       vlan30="vlan 30 vlandev vtnet2"
       ifconfig_vlan30="inet 172.16.30.14 netmask 255.255.255.240" # VLAN 30 (OPT1 vmbr4)
+      
       vlan40="vlan 40 vlandev vtnet2"
       ifconfig_vlan40="inet 172.16.40.30 netmask 255.255.255.224" # VLAN 40 (OPT1 vmbr4)
 
-      # Enable NAT
+      # Enable NAT and Firewall
       gateway_enable="YES"
       pf_enable="YES"
-      echo "nat on vtnet0 from 172.16.1.0/24 to any -> (vtnet0)" >> /etc/pf.conf
-      echo "nat on vtnet0 from 172.16.30.0/28 to any -> (vtnet0)" >> /etc/pf.conf
-      echo "nat on vtnet0 from 172.16.40.0/27 to any -> (vtnet0)" >> /etc/pf.conf
-
-      # Firewall rules
-      echo "pass in on vtnet1 from 172.16.1.0/24 to any" >> /etc/pf.conf
-      echo "pass in on vlan30 from 172.16.30.0/28 to any" >> /etc/pf.conf
-      echo "pass in on vlan40 from 172.16.40.0/27 to any" >> /etc/pf.conf
 
       # Configuration des routes statiques persistantes
       static_routes="route1 route2 route3 route4"
@@ -30,13 +25,31 @@ write_files:
       route_route3="-net 172.16.20.0/28 172.16.30.14"
       route_route4="-net 172.16.50.0/28 172.16.30.14"
 
+  - path: /etc/pf.conf
+    content: |
+      # Options globales
+      set skip on lo
+
+      # Normalisation
+      scrub in all
+
+      # NAT (Traduction)
+      nat on vtnet0 from 172.16.1.0/24 to any -> (vtnet0)
+      nat on vtnet0 from 172.16.30.0/28 to any -> (vtnet0)
+      nat on vtnet0 from 172.16.40.0/27 to any -> (vtnet0)
+
+      # Règles de filtrage
+      pass in on vtnet1 from 172.16.1.0/24 to any
+      pass in on vlan30 from 172.16.30.0/28 to any
+      pass in on vlan40 from 172.16.40.0/27 to any
+
   - path: /etc/sysctl.conf
     content: |
       net.inet.ip.forwarding=1
 
 runcmd:
 
-  # Ajouter les routes statiques
+  # Ajouter immédiatement les routes statiques
   - "route add -net 172.16.5.0/24 172.16.30.14"
   - "route add -net 172.16.10.0/24 172.16.30.14"
   - "route add -net 172.16.20.0/28 172.16.30.14"
@@ -46,7 +59,7 @@ runcmd:
   - "pkg update -f"
   
   # Ajouter le dépôt d'OPNsense
-  - "echo 'OPNsense repository configuration' >> /usr/local/etc/pkg/repos/OPNsense.conf"
+  - "echo 'OPNsense repository configuration' > /usr/local/etc/pkg/repos/OPNsense.conf"
   - "echo 'OPNsense: { url: \"http://pkg.opnsense.org/freebsd/$(uname -r)/amd64/latest\", enabled: yes }' >> /usr/local/etc/pkg/repos/OPNsense.conf"
 
   # Installer OPNsense depuis le dépôt officiel
