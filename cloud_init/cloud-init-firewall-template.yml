@@ -21,15 +21,15 @@ runcmd:
 
   # Mettre à jour les paquets
   - "pkg update -f"
-  
+  - "sleep 10"  # Attendre 10 secondes avant de tenter de télécharger le script"
   # Télécharger le script d'installation OPNsense
   - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in"
-
+  - "sleep 10"  # Attendre 10 secondes avant de tenter de télécharger le script"
   # Rendre le script exécutable
   - "chmod +x ./opnsense-bootstrap.sh.in"
-  
+  - "sleep 10"  # Attendre 10 secondes avant de tenter de télécharger le script"
   # Exécution du script d'installation d'OPNsense
   - "sh ./opnsense-bootstrap.sh.in -r 25.1"
-
+  - "sleep 10"  # Attendre 10 secondes avant de tenter de télécharger le script"
   # Redémarrer pour appliquer les changements
   - "reboot"
