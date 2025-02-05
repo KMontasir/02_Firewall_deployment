@@ -1,1 +1,28 @@
+#cloud-config
+hostname: "firewall-template"
 
+users:
+  - name: admin
+    gecos: "Admin User"
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    shell: /bin/sh
+    lock-passwd: false
+    passwd: "$6$b9T6gEnQwVvxM5gV$MIecEzUmOUeJFs4Z/BCKDcbowu0s/0qgVFqLoL3ZEYs18ik6JFBsBXZsXKiu.UuLEKd9VlttjkUh/XSpj90d6/"  # Password --> opnsense
+
+# cloud-init configuration for FreeBSD with OPNsense setup
+runcmd:
+
+  # Mettre à jour les paquets
+  - "pkg update -f"
+  
+  # Téléchargement du script d'installation OPNsense
+  - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in"
+
+  # Rendre le script exécutable
+  - "chmod +x ./opnsense-bootstrap.sh.in"
+  
+  # Exécution du script d'installation d'OPNsense
+  - "sh ./opnsense-bootstrap.sh.in -r 25.1"
+
+  # Redémarrer pour appliquer les changements
+  - "reboot"
