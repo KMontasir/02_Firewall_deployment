@@ -17,14 +17,12 @@ runcmd:
   
   # Téléchargement du script d'installation OPNsense
   - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in"
+
+  # Rendre le script exécutable
+  - "chmod +x ./opnsense-bootstrap.sh.in"
   
   # Exécution du script d'installation d'OPNsense
   - "sh ./opnsense-bootstrap.sh.in -r 25.1"
-
-  # Activer le pare-feu et démarrer le service
-  - "sysrc firewall_enable=YES"
-  - "sysrc pf_enable=YES"
-  - "service pf start"
 
   # Redémarrer pour appliquer les changements
   - "echo 'Installation terminée, veuillez redémarrer manuellement si nécessaire'"
@@ -33,9 +31,9 @@ write_files:
   - path: /etc/rc.conf
     content: |
       # Configuration des interfaces réseau
-      #ifconfig_vtnet0="DHCP"  # WAN (vmbr0)
-      ifconfig_vtnet0="inet 192.168.243.141 netmask 255.255.255.0"
-      nameserver="8.8.8.8"
+      ifconfig_vtnet0="DHCP"  # WAN (vmbr0)
+      #ifconfig_vtnet0="inet 192.168.243.141 netmask 255.255.255.0"
+      #nameserver="8.8.8.8"
       
       ifconfig_vtnet1="inet 172.16.1.6 netmask 255.255.255.0"  # LAN (vmbr4)
       ifconfig_vtnet2="up"
@@ -46,7 +44,7 @@ write_files:
       ifconfig_vlan60="inet 172.16.60.14 netmask 255.255.255.240 vlan 60 vlandev vtnet2"
 
       # Passerelles
-      defaultrouter="192.168.243.2"  # Passerelle pour le WAN (interface vtnet0)
+      #defaultrouter="192.168.243.2"  # Passerelle pour le WAN (interface vtnet0)
       route_vlan50="172.16.50.13"   # Passerelle pour le VLAN50
       
       # Activer NAT et PF
