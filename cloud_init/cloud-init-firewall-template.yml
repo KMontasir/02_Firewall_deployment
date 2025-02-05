@@ -20,7 +20,7 @@ runcmd:
   - "service netif restart"
   - "service routing restart"
   # Forcer la génération des clés SSH immédiatement
-  - "service sshd restart"
+  - "service sshd restart > /dev/null 2>&1"
   - "sleep 5"
   
   # Vérification de la connectivité réseau
