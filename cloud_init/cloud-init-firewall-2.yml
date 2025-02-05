@@ -62,12 +62,6 @@ write_files:
       net.inet.ip.forwarding=1
 
 runcmd:
-  # Ajouter immédiatement les routes statiques
-  - "route add -net 172.16.5.0/24 172.16.30.29"
-  - "route add -net 172.16.10.0/24 172.16.30.29"
-  - "route add -net 172.16.20.0/27 172.16.30.29"
-  - "route add -net 172.16.60.0/28 172.16.50.14"
-  
   # Mettre à jour les paquets
   - "pkg update -f"
   
