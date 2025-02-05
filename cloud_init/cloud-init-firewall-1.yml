@@ -11,33 +11,23 @@ users:
 
 # cloud-init configuration for FreeBSD with OPNsense setup
 runcmd:
-    
-  # Activation du pare-feu et démarrage du service
+
+  # Mettre à jour les paquets
+  - "pkg update -f"
+  
+  # Téléchargement du script d'installation OPNsense
+  - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in"
+  
+  # Exécution du script d'installation d'OPNsense
+  - "sh ./opnsense-bootstrap.sh.in -r 25.1"
+
+  # Activer le pare-feu et démarrer le service
   - "sysrc firewall_enable=YES"
   - "sysrc pf_enable=YES"
   - "service pf start"
-  # Mise à jour des paquets
-  - "pkg update -f"
 
-  # Création du fichier de configuration du dépôt OPNsense
-  - mkdir -p /usr/local/etc/pkg/repos
-  - |
-    echo 'OPNsense: {
-        url: "https://pkg.opnsense.org/FreeBSD:13:amd64/latest",
-        mirror_type: "srv",
-        signature_type: "fingerprints",
-        fingerprints: "/usr/local/etc/pkg/fingerprints/OPNsense",
-        enabled: yes
-    }' > /usr/local/etc/pkg/repos/OPNsense.conf
-
-  # Téléchargement des empreintes pour les paquets OPNsense
-  - mkdir -p /usr/local/etc/pkg/fingerprints/OPNsense
-  - fetch -o /usr/local/etc/pkg/fingerprints/OPNsense/trusted https://pkg.opnsense.org/FreeBSD:13:amd64/latest/trusted
-  - fetch -o /usr/local/etc/pkg/fingerprints/OPNsense/revoked https://pkg.opnsense.org/FreeBSD:13:amd64/latest/revoked
-
-  # Mise à jour du catalogue des paquets et installation d'OPNsense
-  - "pkg update"
-  - "pkg install -y opnsense"
+  # Redémarrer pour appliquer les changements
+  - "echo 'Installation terminée, veuillez redémarrer manuellement si nécessaire'"
 
 write_files:
   - path: /etc/rc.conf
