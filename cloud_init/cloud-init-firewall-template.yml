@@ -19,6 +19,9 @@ runcmd:
   # Redémarrer les services réseau pour appliquer les changements de configuration
   - "service netif restart"
   - "service routing restart"
+  # Forcer la génération des clés SSH immédiatement
+  - "service sshd restart"
+  - "sleep 5"
   
   # Vérification de la connectivité réseau
   - "ping -c 3 google.com"
