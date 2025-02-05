@@ -16,7 +16,7 @@ write_files:
       #ifconfig_vtnet0="DHCP"  # WAN (vmbr0)
       ifconfig_vtnet0="inet 172.16.0.5 netmask 255.255.255.240"
       defaultrouter="172.16.0.14"
-      nameserver="10.1.0.1"
+      nameserver="8.8.8.8"
       
       ifconfig_vtnet1="inet 172.16.1.6 netmask 255.255.255.0"  # LAN (vmbr1)
       ifconfig_vtnet2="up"
