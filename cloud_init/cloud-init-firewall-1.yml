@@ -13,10 +13,9 @@ write_files:
   - path: /etc/rc.conf
     content: |
       # Configuration des interfaces réseau
-      #ifconfig_vtnet0="DHCP"  # WAN (vmbr0)
-      ifconfig_vtnet0="inet 172.16.0.5 netmask 255.255.255.240"
-      defaultrouter="172.16.0.14"
-      nameserver="8.8.8.8"
+      ifconfig_vtnet0="DHCP"  # WAN (vmbr0)
+      #ifconfig_vtnet0="inet 172.16.0.5 netmask 255.255.255.240"
+      #nameserver="8.8.8.8"
       
       ifconfig_vtnet1="inet 172.16.1.6 netmask 255.255.255.0"  # LAN (vmbr4)
       ifconfig_vtnet2="up"
@@ -27,7 +26,7 @@ write_files:
       ifconfig_vlan60="inet 172.16.60.14 netmask 255.255.255.240 vlan 60 vlandev vtnet2"
 
       # Passerelles
-      defaultrouter="172.16.0.14"  # Passerelle pour le WAN (interface vtnet0)
+      #defaultrouter="172.16.0.14"  # Passerelle pour le WAN (interface vtnet0)
       route_vlan50="172.16.50.29"   # Passerelle pour le VLAN50
       
       # Activer NAT et PF
@@ -73,10 +72,6 @@ runcmd:
   - "route add -net 172.16.20.0/27 172.16.50.13"
   - "route add -net 172.16.30.0/27 172.16.50.13"
   - "route add -net 172.16.40.0/27 172.16.50.13"
-  
-  # Configuration du dépôt OPNsense
-  - "mkdir -p /usr/local/etc/pkg/repos"
-  - "echo 'OPNsense: { url: \"http://pkg.opnsense.org/freebsd/$(uname -r)/amd64/latest\", enabled: yes }' | tee /usr/local/etc/pkg/repos/OPNsense.conf"
   
   # Mise à jour des paquets
   - "pkg update -f"
