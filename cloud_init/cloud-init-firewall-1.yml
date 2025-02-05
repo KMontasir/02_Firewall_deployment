@@ -9,23 +9,35 @@ users:
     lock-passwd: false
     passwd: "$6$b9T6gEnQwVvxM5gV$MIecEzUmOUeJFs4Z/BCKDcbowu0s/0qgVFqLoL3ZEYs18ik6JFBsBXZsXKiu.UuLEKd9VlttjkUh/XSpj90d6/"  # Password --> opnsense
 
+# cloud-init configuration for FreeBSD with OPNsense setup
 runcmd:
-  # Mise à jour des paquets
-  - "sudo pkg update -f"
-  
-  # Téléchargement du script d'installation OPNsense
-  - "sudo fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in"
-  
-  # Exécution du script d'installation d'OPNsense
-  - "sudo sh ./opnsense-bootstrap.sh.in -r 25.1"
-  
+    
   # Activation du pare-feu et démarrage du service
-  - "sudo sysrc firewall_enable=YES"
-  - "sudo sysrc pf_enable=YES"
-  - "sudo service pf start"
-  
-  # Redémarrage pour appliquer les changements
-  - "echo 'Installation terminée, veuillez redémarrer manuellement si nécessaire'"
+  - "sysrc firewall_enable=YES"
+  - "sysrc pf_enable=YES"
+  - "service pf start"
+  # Mise à jour des paquets
+  - "pkg update -f"
+
+  # Création du fichier de configuration du dépôt OPNsense
+  - mkdir -p /usr/local/etc/pkg/repos
+  - |
+    echo 'OPNsense: {
+        url: "https://pkg.opnsense.org/FreeBSD:13:amd64/latest",
+        mirror_type: "srv",
+        signature_type: "fingerprints",
+        fingerprints: "/usr/local/etc/pkg/fingerprints/OPNsense",
+        enabled: yes
+    }' > /usr/local/etc/pkg/repos/OPNsense.conf
+
+  # Téléchargement des empreintes pour les paquets OPNsense
+  - mkdir -p /usr/local/etc/pkg/fingerprints/OPNsense
+  - fetch -o /usr/local/etc/pkg/fingerprints/OPNsense/trusted https://pkg.opnsense.org/FreeBSD:13:amd64/latest/trusted
+  - fetch -o /usr/local/etc/pkg/fingerprints/OPNsense/revoked https://pkg.opnsense.org/FreeBSD:13:amd64/latest/revoked
+
+  # Mise à jour du catalogue des paquets et installation d'OPNsense
+  - "pkg update"
+  - "pkg install -y opnsense"
 
 write_files:
   - path: /etc/rc.conf
