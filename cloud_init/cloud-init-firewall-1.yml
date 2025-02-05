@@ -93,4 +93,4 @@ runcmd:
   - "service pf start"
   
   # Redémarrage pour appliquer les changements
-  - "reboot"
+  - "echo 'Installation terminée, veuillez redémarrer manuellement si nécessaire'"
