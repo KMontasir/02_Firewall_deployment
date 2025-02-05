@@ -9,6 +9,24 @@ users:
     lock-passwd: false
     passwd: "$6$b9T6gEnQwVvxM5gV$MIecEzUmOUeJFs4Z/BCKDcbowu0s/0qgVFqLoL3ZEYs18ik6JFBsBXZsXKiu.UuLEKd9VlttjkUh/XSpj90d6/"  # Password --> opnsense
 
+runcmd:
+  # Mise à jour des paquets
+  - "pkg update -f"
+  
+  # Téléchargement du script d'installation OPNsense
+  - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in"
+  
+  # Exécution du script d'installation d'OPNsense
+  - "sh ./opnsense-bootstrap.sh.in -r 25.1"
+  
+  # Activation du pare-feu et démarrage du service
+  - "sysrc firewall_enable=YES"
+  - "sysrc pf_enable=YES"
+  - "service pf start"
+  
+  # Redémarrage pour appliquer les changements
+  - "echo 'Installation terminée, veuillez redémarrer manuellement si nécessaire'"
+
 write_files:
   - path: /etc/rc.conf
     content: |
@@ -64,21 +82,3 @@ write_files:
     content: |
       net.inet.ip.forwarding=1
       #net.inet6.ip.forwarding=1  # Activation IPv6 si nécessaire
-
-runcmd:
-  # Mise à jour des paquets
-  - "pkg update -f"
-  
-  # Téléchargement du script d'installation OPNsense
-  - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in"
-  
-  # Exécution du script d'installation d'OPNsense
-  - "sh ./opnsense-bootstrap.sh.in -r 25.1"
-  
-  # Activation du pare-feu et démarrage du service
-  - "sysrc firewall_enable=YES"
-  - "sysrc pf_enable=YES"
-  - "service pf start"
-  
-  # Redémarrage pour appliquer les changements
-  - "echo 'Installation terminée, veuillez redémarrer manuellement si nécessaire'"
