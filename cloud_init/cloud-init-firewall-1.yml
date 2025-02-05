@@ -11,18 +11,18 @@ users:
 
 runcmd:
   # Mise à jour des paquets
-  - "pkg update -f"
+  - "sudo pkg update -f"
   
   # Téléchargement du script d'installation OPNsense
-  - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in"
+  - "sudo fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in"
   
   # Exécution du script d'installation d'OPNsense
-  - "sh ./opnsense-bootstrap.sh.in -r 25.1"
+  - "sudo sh ./opnsense-bootstrap.sh.in -r 25.1"
   
   # Activation du pare-feu et démarrage du service
-  - "sysrc firewall_enable=YES"
-  - "sysrc pf_enable=YES"
-  - "service pf start"
+  - "sudo sysrc firewall_enable=YES"
+  - "sudo sysrc pf_enable=YES"
+  - "sudo service pf start"
   
   # Redémarrage pour appliquer les changements
   - "echo 'Installation terminée, veuillez redémarrer manuellement si nécessaire'"
