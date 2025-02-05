@@ -25,23 +25,24 @@ runcmd:
   - "sleep 10"  # Attendre 10 secondes pour s'assurer que le réseau fonctionne correctement
   
   # Mettre à jour les paquets avec un miroir alternatif
-  - "sed -i '' 's/pkg.FreeBSD.org/pkg.freebsd.org/g' /etc/pkg/FreeBSD.conf"
+  #- "sed -i '' 's/pkg.FreeBSD.org/pkg.freebsd.org/g' /etc/pkg/FreeBSD.conf"
   - "pkg update -f"
   - "sleep 10"  # Attendre 10 secondes pour permettre à pkg de se mettre à jour
   
   # Télécharger le script d'installation OPNsense
-  - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in"
+  #- "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in"
+  - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in -o /tmp/opnsense-bootstrap.sh.in"
   - "sleep 10"  # Attendre 10 secondes pour que le fichier soit téléchargé
   
   # Vérifier que le fichier a bien été téléchargé
-  - "ls -l /root/opnsense-bootstrap.sh.in"
+  - "ls -l /tmp/opnsense-bootstrap.sh.in"
   
   # Rendre le script exécutable
-  - "chmod +x /root/opnsense-bootstrap.sh.in"
+  - "chmod +x /tmp/opnsense-bootstrap.sh.in"
   - "sleep 5"  # Attendre quelques secondes pour rendre le fichier exécutable
   
   # Exécuter le script d'installation d'OPNsense
-  - "sh /root/opnsense-bootstrap.sh.in -r 25.1"
+  - "sh /tmp/opnsense-bootstrap.sh.in -r 25.1"
   - "sleep 10"  # Attendre un peu avant de redémarrer pour permettre à OPNsense de s'installer
   
   # Redémarrer le système pour appliquer les changements et démarrer OPNsense
