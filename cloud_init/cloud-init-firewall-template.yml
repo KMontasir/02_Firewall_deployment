@@ -39,11 +39,14 @@ runcmd:
   
   # Rendre le script exécutable
   - "chmod +x /tmp/opnsense-bootstrap.sh.in"
-  - "sleep 5"  # Attendre quelques secondes pour rendre le fichier exécutable
+  # Vérifier que le fichier a bien été téléchargé
+  - "ls -l /tmp/opnsense-bootstrap.sh.in"
+  
+  - "sleep 10"  # Attendre quelques secondes pour rendre le fichier exécutable
   
   # Exécuter le script d'installation d'OPNsense
   - "sh /tmp/opnsense-bootstrap.sh.in -r 25.1"
   - "sleep 10"  # Attendre un peu avant de redémarrer pour permettre à OPNsense de s'installer
   
   # Redémarrer le système pour appliquer les changements et démarrer OPNsense
-  - "reboot"
+  #- "reboot"
