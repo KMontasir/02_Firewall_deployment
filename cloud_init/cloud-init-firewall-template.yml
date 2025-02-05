@@ -9,13 +9,26 @@ users:
     lock-passwd: false
     passwd: "$6$b9T6gEnQwVvxM5gV$MIecEzUmOUeJFs4Z/BCKDcbowu0s/0qgVFqLoL3ZEYs18ik6JFBsBXZsXKiu.UuLEKd9VlttjkUh/XSpj90d6/"  # Password --> opnsense
 
-# cloud-init configuration for FreeBSD with OPNsense setup
-runcmd:
+# Configuration réseau (ajoutée pour le réseau statique)
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    em0:  # Remplacez "em0" par le nom correct de votre interface réseau
+      dhcp4: no
+      addresses:
+        - 192.168.1.141/24
+      gateway4: 192.168.1.254
+      nameservers:
+        addresses:
+          - 192.168.1.254
 
+# cloud-init configuration pour FreeBSD avec installation d'OPNsense
+runcmd:
   # Mettre à jour les paquets
   - "pkg update -f"
   
-  # Téléchargement du script d'installation OPNsense
+  # Télécharger le script d'installation OPNsense
   - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in"
 
   # Rendre le script exécutable
