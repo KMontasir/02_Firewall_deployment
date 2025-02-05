@@ -66,13 +66,6 @@ write_files:
       #net.inet6.ip.forwarding=1  # Activation IPv6 si nécessaire
 
 runcmd:
-  # Ajouter les routes statiques immédiatement
-  - "route add -net 172.16.5.0/24 172.16.50.13"
-  - "route add -net 172.16.10.0/24 172.16.50.13"
-  - "route add -net 172.16.20.0/27 172.16.50.13"
-  - "route add -net 172.16.30.0/27 172.16.50.13"
-  - "route add -net 172.16.40.0/27 172.16.50.13"
-  
   # Mise à jour des paquets
   - "pkg update -f"
   
