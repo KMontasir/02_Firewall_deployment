@@ -16,6 +16,9 @@ runcmd:
   - "echo 'defaultrouter=\"192.168.1.254\"' >> /etc/rc.conf"
   - "echo 'nameserver 192.168.1.254' > /etc/resolv.conf"
 
+  - "echo 'Test ...'"
+  - "sleep 30"  # Attendre 10 secondes avant de tenter de télécharger le script"
+
   # Mettre à jour les paquets
   - "pkg update -f"
   
