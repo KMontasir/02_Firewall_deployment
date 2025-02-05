@@ -13,25 +13,22 @@ write_files:
   - path: /etc/rc.conf
     content: |
       # Interfaces configuration
-      ifconfig_vtnet0="inet 172.16.30.29 netmask 255.255.255.224" # WAN (vmbr0)
+      ifconfig_vtnet0="inet 172.16.30.29 netmask 255.255.255.224" # WAN (vmbr2)
       ifconfig_vtnet1="inet 172.16.1.8 netmask 255.255.255.0" # LAN (vmbr1)
       ifconfig_vtnet2="up"
       
       # VLAN Configuration (OPT1)
       vlan5="vlan 5 vlandev vtnet2"
-      ifconfig_vlan5="inet 172.16.5.254 netmask 255.255.255.0" # VLAN 5 (OPT1 vmbr4)
+      ifconfig_vlan5="inet 172.16.5.254 netmask 255.255.255.0" # VLAN 5 (OPT1 vmbr3)
       
       vlan10="vlan 10 vlandev vtnet2"
-      ifconfig_vlan10="inet 172.16.10.254 netmask 255.255.255.0" # VLAN 10 (OPT1 vmbr4)
+      ifconfig_vlan10="inet 172.16.10.254 netmask 255.255.255.0" # VLAN 10 (OPT1 vmbr3)
       
       vlan20="vlan 20 vlandev vtnet2"
-      ifconfig_vlan20="inet 172.16.20.29 netmask 255.255.255.224" # VLAN 20 (OPT1 vmbr4)
+      ifconfig_vlan20="inet 172.16.20.29 netmask 255.255.255.224" # VLAN 20 (OPT1 vmbr3)
 
       # Passerelles
       defaultrouter="172.16.30.30"  # Passerelle pour le WAN
-      #route_vlan5="172.16.5.253"    # Passerelle pour VLAN 5
-      #route_vlan10="172.16.10.253"  # Passerelle pour VLAN 10
-      #route_vlan20="172.16.20.30"   # Passerelle pour VLAN 20
 
       # Enable NAT and Firewall
       gateway_enable="YES"
