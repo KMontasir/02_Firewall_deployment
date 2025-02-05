@@ -13,20 +13,21 @@ write_files:
   - path: /etc/rc.conf
     content: |
       # Interfaces configuration
-      ifconfig_vtnet0="inet 172.16.50.13 netmask 255.255.255.240" # WAN (vmbr0)
-      ifconfig_vtnet1="inet 172.16.1.7 netmask 255.255.255.0" # LAN (vmbr1)
+      ifconfig_vtnet0="inet 172.16.50.13 netmask 255.255.255.240" # WAN (vmbr1)
+      ifconfig_vtnet1="inet 172.16.1.7 netmask 255.255.255.0" # LAN (vmbr4)
       ifconfig_vtnet2="up"
       
       # VLAN Configuration (OPT1)
       vlan30="vlan 30 vlandev vtnet2"
-      ifconfig_vlan30="inet 172.16.30.30 netmask 255.255.255.224" # VLAN 30 (OPT1 vmbr4)
+      ifconfig_vlan30="inet 172.16.30.30 netmask 255.255.255.224" # VLAN 30 (OPT1 vmbr2)
       
       vlan40="vlan 40 vlandev vtnet2"
-      ifconfig_vlan40="inet 172.16.40.30 netmask 255.255.255.224" # VLAN 40 (OPT1 vmbr4)
+      ifconfig_vlan40="inet 172.16.40.30 netmask 255.255.255.224" # VLAN 40 (OPT1 vmbr2)
 
       # Passerelles
-      defaultrouter="172.16.50.13"  # Passerelle pour le WAN (interface vtnet0)
+      defaultrouter="172.16.50.13"  # Passerelle pour le WAN (interface vtnet1)
       route_vlan30="172.16.30.29"   # Passerelle pour le VLAN30
+      route_vlan40="172.16.40.29"   # Passerelle pour le VLAN40
 
       # Enable NAT and Firewall
       gateway_enable="YES"
