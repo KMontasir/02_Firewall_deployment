@@ -44,7 +44,7 @@ write_files:
       ifconfig_vlan40="inet 172.16.40.30 netmask 255.255.255.224" # VLAN 40 (OPT1 vmbr2)
 
       # Passerelles
-      defaultrouter="172.16.50.13"  # Passerelle pour le WAN (interface vtnet1)
+      defaultrouter="172.16.50.14"  # Passerelle pour le WAN (interface vtnet1)
       route_vlan30="172.16.30.29"   # Passerelle pour le VLAN30
 
       # Enable NAT and Firewall
