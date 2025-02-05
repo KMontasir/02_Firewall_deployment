@@ -25,6 +25,11 @@ write_files:
       cloned_interfaces="vlan50 vlan60"
       ifconfig_vlan50="inet 172.16.50.14 netmask 255.255.255.240 vlan 50 vlandev vtnet2"
       ifconfig_vlan60="inet 172.16.60.14 netmask 255.255.255.240 vlan 60 vlandev vtnet2"
+
+      # Passerelles
+      defaultrouter="172.16.0.14"  # Passerelle pour le WAN (interface vtnet0)
+      route_vlan50="172.16.50.29"   # Passerelle pour le VLAN50
+      route_vlan60="172.16.60.29"   # Passerelle pour le VLAN60
       
       # Activer NAT et PF
       gateway_enable="YES"
