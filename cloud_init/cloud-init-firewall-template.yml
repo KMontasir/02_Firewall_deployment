@@ -11,43 +11,36 @@ users:
 
 # cloud-init configuration pour FreeBSD avec installation d'OPNsense
 runcmd:
-  # Configuration réseau manuelle pour vtnet0
+  # Configuration réseau pour vtnet0
   - "echo 'ifconfig_vtnet0=\"inet 192.168.1.141 netmask 255.255.255.0\"' >> /etc/rc.conf"
   - "echo 'defaultrouter=\"192.168.1.254\"' >> /etc/rc.conf"
   - "echo 'nameserver 192.168.1.254' > /etc/resolv.conf"
 
-  # Redémarrer les services réseau
+  # Redémarrer les services réseau pour appliquer la configuration
   - "service netif restart"
   - "service routing restart"
 
-  # Empêcher l'affichage des clés SSH au premier boot
-  - "touch /etc/ssh/ssh_host_rsa_key"
-  - "touch /etc/ssh/ssh_host_ecdsa_key"
-  - "touch /etc/ssh/ssh_host_ed25519_key"
-
-  # Redémarrer SSH sans affichage
-  - "service sshd restart > /dev/null 2>&1"
+  # Forcer la génération des clés SSH immédiatement pour éviter l'affichage plus tard
+  - "ssh-keygen -A"
+  - "service sshd restart"
   - "sleep 5"
 
   # Vérification de la connectivité réseau
   - "ping -c 3 google.com"
   - "sleep 10"
 
-  # Mettre à jour les paquets avec un miroir alternatif
+  # Mise à jour des paquets
   - "pkg update -f"
   - "sleep 10"
 
   # Télécharger le script d'installation OPNsense
-  - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in -o /tmp/opnsense-bootstrap.sh.in"
-  - "sleep 10"
+  - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in -o /root/opnsense-bootstrap.sh.in"
+  - "chmod +x /root/opnsense-bootstrap.sh.in"
 
-  # Rendre le script exécutable
-  - "chmod +x /tmp/opnsense-bootstrap.sh.in"
-  - "ls -l /tmp/opnsense-bootstrap.sh.in"
-  - "sleep 10"
-
-  # Exécuter le bootstrap en arrière-plan
-  - "nohup sh /tmp/opnsense-bootstrap.sh.in -r 25.1 > /tmp/bootstrap.log 2>&1 &"
-
-  # Redémarrer après installation
+  # Ajouter le script au démarrage via rc.local
+  - "echo '#!/bin/sh' > /etc/rc.local"
+  - "echo '/root/opnsense-bootstrap.sh.in -r 25.1 && rm -f /etc/rc.local && reboot' >> /etc/rc.local"
+  - "chmod +x /etc/rc.local"
+  
+  # Redémarrer la machine pour exécuter l'installation automatiquement au boot
   - "reboot"
