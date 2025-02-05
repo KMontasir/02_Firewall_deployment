@@ -27,7 +27,6 @@ write_files:
       # Passerelles
       defaultrouter="172.16.50.13"  # Passerelle pour le WAN (interface vtnet1)
       route_vlan30="172.16.30.29"   # Passerelle pour le VLAN30
-      route_vlan40="172.16.40.29"   # Passerelle pour le VLAN40
 
       # Enable NAT and Firewall
       gateway_enable="YES"
