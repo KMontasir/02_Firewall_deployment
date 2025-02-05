@@ -20,27 +20,20 @@ runcmd:
   - "service netif restart"
   - "service routing restart"
 
-  # Forcer la génération des clés SSH immédiatement pour éviter l'affichage plus tard
-  - "ssh-keygen -A"
-  - "service sshd restart"
-  - "sleep 5"
-
-  # Vérification de la connectivité réseau
-  - "ping -c 3 google.com"
-  - "sleep 10"
-
   # Mise à jour des paquets
   - "pkg update -f"
-  - "sleep 10"
 
   # Télécharger le script d'installation OPNsense
   - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in -o /root/opnsense-bootstrap.sh.in"
   - "chmod +x /root/opnsense-bootstrap.sh.in"
-
-  # Ajouter le script au démarrage via rc.local
-  - "echo '#!/bin/sh' > /etc/rc.local"
-  - "echo '/root/opnsense-bootstrap.sh.in -r 25.1 && rm -f /etc/rc.local && reboot' >> /etc/rc.local"
-  - "chmod +x /etc/rc.local"
   
-  # Redémarrer la machine pour exécuter l'installation automatiquement au boot
+  # Écrire un script pour exécuter le bootstrap au redémarrage
+  - "echo '#!/bin/sh' > /etc/rc.local"
+  - "echo 'nohup sh /tmp/opnsense-bootstrap.sh.in -r 25.1 > /tmp/bootstrap.log 2>&1 &' >> /etc/rc.local"
+  - "echo 'sleep 300' >> /etc/rc.local"
+  - "echo 'rm -f /etc/rc.local' >> /etc/rc.local"
+  - "chmod +x /etc/rc.local"
+
+  # Redémarrer pour appliquer et lancer l'installation au boot
   - "reboot"
+
