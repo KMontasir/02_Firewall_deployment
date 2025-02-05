@@ -11,11 +11,12 @@ DISK_SIZE="20G"
 CLOUDINIT_DISK="${SNIPPET_STORAGE}:cloudinit"  # Cloud-Init reste sur "local"
 
 # Variables pour les VMs OPNsense
-OPNSENSE_VMS=("opnsense1" "opnsense2" "opnsense3")
-VM_IDS=(1001 1002 1003)
+OPNSENSE_VMS=("template opnsense1" "opnsense2" "opnsense3")
+VM_IDS=(9998 1001 1002 1003)
 
 # Chemins vers les fichiers Cloud-init spécifiques
 CLOUDINIT_FILES=( 
+  "/root/02_Firewall_deployment/cloud_init/cloud-init-firewall-template.yml"
   "/root/02_Firewall_deployment/cloud_init/cloud-init-firewall-1.yml"
   "/root/02_Firewall_deployment/cloud_init/cloud-init-firewall-2.yml"
   "/root/02_Firewall_deployment/cloud_init/cloud-init-firewall-3.yml"
@@ -33,6 +34,7 @@ done
 
 # Configuration des interfaces réseau pour chaque VM
 NETWORK_CONFIGS=( 
+  "vmbr0,vmbr1,vmbr4"
   "vmbr0,vmbr1,vmbr4"
   "vmbr1,vmbr2,vmbr4"
   "vmbr2,vmbr3,vmbr4"
