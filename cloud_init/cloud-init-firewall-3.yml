@@ -14,7 +14,7 @@ write_files:
     content: |
       # Interfaces configuration
       ifconfig_vtnet0="inet 172.16.30.29 netmask 255.255.255.224" # WAN (vmbr2)
-      ifconfig_vtnet1="inet 172.16.1.8 netmask 255.255.255.0" # LAN (vmbr1)
+      ifconfig_vtnet1="inet 172.16.1.8 netmask 255.255.255.0" # LAN (vmbr4)
       ifconfig_vtnet2="up"
       
       # VLAN Configuration (OPT1)
@@ -25,7 +25,7 @@ write_files:
       ifconfig_vlan10="inet 172.16.10.254 netmask 255.255.255.0" # VLAN 10 (OPT1 vmbr3)
       
       vlan20="vlan 20 vlandev vtnet2"
-      ifconfig_vlan20="inet 172.16.20.29 netmask 255.255.255.224" # VLAN 20 (OPT1 vmbr3)
+      ifconfig_vlan20="inet 172.16.20.30 netmask 255.255.255.224" # VLAN 20 (OPT1 vmbr3)
 
       # Passerelles
       defaultrouter="172.16.30.30"  # Passerelle pour le WAN
