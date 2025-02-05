@@ -15,8 +15,12 @@ runcmd:
   - "echo 'ifconfig_vtnet0=\"inet 192.168.1.141 netmask 255.255.255.0\"' >> /etc/rc.conf"
   - "echo 'defaultrouter=\"192.168.1.254\"' >> /etc/rc.conf"
   - "echo 'nameserver 192.168.1.254' > /etc/resolv.conf"
+  # Redémarrer les services réseau pour appliquer les changements
+  - "service netif restart"
+  - "service routing restart"
     # Vérification de la connectivité réseau
   - "ping -c 3 google.com"
+  - "sleep 10"  # Attendre 10 secondes avant de tenter de télécharger le script"
 
   # Mettre à jour les paquets avec un miroir alternatif
   - "sed -i '' 's/pkg.FreeBSD.org/pkg.freebsd.org/g' /etc/pkg/FreeBSD.conf"
