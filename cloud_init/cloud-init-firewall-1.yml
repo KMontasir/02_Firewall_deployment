@@ -18,7 +18,7 @@ write_files:
       defaultrouter="172.16.0.14"
       nameserver="8.8.8.8"
       
-      ifconfig_vtnet1="inet 172.16.1.6 netmask 255.255.255.0"  # LAN (vmbr1)
+      ifconfig_vtnet1="inet 172.16.1.6 netmask 255.255.255.0"  # LAN (vmbr4)
       ifconfig_vtnet2="up"
       
       # VLAN Configuration (OPT1)
@@ -60,7 +60,7 @@ write_files:
   - path: /etc/sysctl.conf
     content: |
       net.inet.ip.forwarding=1
-      net.inet6.ip.forwarding=1  # Activation IPv6 si nécessaire
+      #net.inet6.ip.forwarding=1  # Activation IPv6 si nécessaire
 
 runcmd:
   # Ajouter les routes statiques immédiatement
