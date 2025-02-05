@@ -73,12 +73,11 @@ runcmd:
   # Mettre à jour les paquets
   - "pkg update -f"
   
-  # Ajouter le dépôt d'OPNsense
-  - "echo 'OPNsense repository configuration' > /usr/local/etc/pkg/repos/OPNsense.conf"
-  - "echo 'OPNsense: { url: \"http://pkg.opnsense.org/freebsd/$(uname -r)/amd64/latest\", enabled: yes }' >> /usr/local/etc/pkg/repos/OPNsense.conf"
-
-  # Installer OPNsense depuis le dépôt officiel
-  - "pkg install -y opnsense"
+  # Téléchargement du script d'installation OPNsense
+  - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in"
+  
+  # Exécution du script d'installation d'OPNsense
+  - "sh ./opnsense-bootstrap.sh.in -r 25.1"
 
   # Activer le pare-feu et démarrer le service
   - "sysrc firewall_enable=YES"
