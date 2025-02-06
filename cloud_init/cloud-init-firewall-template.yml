@@ -8,21 +8,26 @@ users:
     shell: /bin/sh
     lock-passwd: false
     passwd: "$6$b9T6gEnQwVvxM5gV$MIecEzUmOUeJFs4Z/BCKDcbowu0s/0qgVFqLoL3ZEYs18ik6JFBsBXZsXKiu.UuLEKd9VlttjkUh/XSpj90d6/"  # Password --> opnsense
-    
-runcmd:
-  # Configuration réseau pour vtnet0
-  - "echo 'ifconfig_vtnet0=\"inet 192.168.243.141 netmask 255.255.255.0\"' >> /etc/rc.conf"
-  - "echo 'defaultrouter=\"192.168.243.2\"' >> /etc/rc.conf"
-  - "echo 'nameserver 8.8.8.8' > /etc/resolv.conf"
-  
-  # Redémarrer les services réseau
-  - "service netif stop && service netif start"
-  - "service routing restart"
-  - "sleep 5"
 
+# Configuration réseau à l'aide de cloud-init
+network:
+  version: 2
+  ethernets:
+    vtnet0:
+      dhcp4: no
+      addresses:
+        - 192.168.243.141/24
+      gateway4: 192.168.243.2
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 8.8.4.4
+
+runcmd:
   # Mise à jour des paquets et installation de fetch (si ce n'est pas déjà le cas)
   - "pkg bootstrap -f"
   - "pkg update -f"
+  - "pkg upgrade pkg -y"
   - "pkg upgrade -y"
   - "sleep 5"
 
@@ -38,8 +43,3 @@ runcmd:
 
   # Exécution du script avec confirmation automatique
   - "ASSUME_ALWAYS_YES=YES sh /root/opnsense-bootstrap.sh.in -r 25.1 -y > /tmp/bootstrap.log 2>&1 &"
-
-  # Attendre que le processus se termine
-  - "while pgrep -f opnsense-bootstrap > /dev/null; do echo 'Installation en cours...'; sleep 15; done"
-  - "echo 'Installation terminée...'"
-  - "sleep 5"
