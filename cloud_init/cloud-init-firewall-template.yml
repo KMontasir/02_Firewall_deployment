@@ -45,7 +45,8 @@ runcmd:
   - "sleep 5"
 
   # Exécuter le script en arrière-plan pour éviter l'interruption
-  - "ASSUME_ALWAYS_YES=YES nohup sh /tmp/opnsense-bootstrap.sh.in -r 25.1 > /tmp/bootstrap.log 2>&1 &"
+  #- "ASSUME_ALWAYS_YES=YES nohup sh /tmp/opnsense-bootstrap.sh.in -r 25.1 > /tmp/bootstrap.log 2>&1 &"
+  - "nohup sh /tmp/opnsense-bootstrap.sh.in -y -r 25.1 > /tmp/bootstrap.log 2>&1 &"
   - "sleep 10"  # Attente de 5 minutes
 
   # Vérifier si le processus tourne toujours
