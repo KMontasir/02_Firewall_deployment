@@ -9,31 +9,32 @@ users:
     lock-passwd: false
     passwd: "$6$b9T6gEnQwVvxM5gV$MIecEzUmOUeJFs4Z/BCKDcbowu0s/0qgVFqLoL3ZEYs18ik6JFBsBXZsXKiu.UuLEKd9VlttjkUh/XSpj90d6/"  # Password --> opnsense
 
-# cloud-init configuration pour FreeBSD avec installation d'OPNsense
 runcmd:
-  # Configuration réseau pour vtnet0
-  - "echo 'ifconfig_vtnet0=\"inet 192.168.1.141 netmask 255.255.255.0\"' >> /etc/rc.conf"
-  - "echo 'defaultrouter=\"192.168.1.254\"' >> /etc/rc.conf"
-  - "echo 'nameserver 192.168.1.254' > /etc/resolv.conf"
+  # Configuration réseau manuelle pour vtnet0
+  - "echo 'ifconfig_vtnet0=\"inet 192.168.243.50 netmask 255.255.255.0\"' >> /etc/rc.conf"
+  - "echo 'defaultrouter=\"192.168.243.2\"' >> /etc/rc.conf"
+  - "echo 'nameserver 8.8.8.8' > /etc/resolv.conf"
 
-  # Redémarrer les services réseau pour appliquer la configuration
+  # Redémarrer les services réseau
   - "service netif restart"
   - "service routing restart"
-
-  # Mise à jour des paquets
-  - "pkg update -f"
-
-  # Télécharger le script d'installation OPNsense
-  - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in -o /root/opnsense-bootstrap.sh.in"
-  - "chmod +x /root/opnsense-bootstrap.sh.in"
   
-  # Écrire un script pour exécuter le bootstrap au redémarrage
-  - "echo '#!/bin/sh' > /etc/rc.local"
-  - "echo 'nohup sh /tmp/opnsense-bootstrap.sh.in -r 25.1 > /tmp/bootstrap.log 2>&1 &' >> /etc/rc.local"
-  - "echo 'sleep 300' >> /etc/rc.local"
-  - "echo 'rm -f /etc/rc.local' >> /etc/rc.local"
-  - "chmod +x /etc/rc.local"
+  # Vérification réseau
+  - "ping -c 3 google.com"
+  - "step 5"
 
-  # Redémarrer pour appliquer et lancer l'installation au boot
+  # Télécharger et stocker le script d’installation
+  - "fetch -o /usr/local/etc/opnsense-bootstrap.sh https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in"
+  - "chmod +x /usr/local/etc/opnsense-bootstrap.sh"
+
+  # Création d’un service pour exécuter le bootstrap au prochain redémarrage
+  - "echo '#!/bin/sh' > /usr/local/etc/rc.d/opnsense_bootstrap"
+  - "echo 'nohup sh /usr/local/etc/opnsense-bootstrap.sh -r 25.1 > /var/log/bootstrap.log 2>&1 &' >> /usr/local/etc/rc.d/opnsense_bootstrap"
+  - "echo 'rm -f /usr/local/etc/rc.d/opnsense_bootstrap' >> /usr/local/etc/rc.d/opnsense_bootstrap"
+  - "chmod +x /usr/local/etc/rc.d/opnsense_bootstrap"
+
+  # Activer l'exécution automatique du script
+  - "echo 'sh /usr/local/etc/rc.d/opnsense_bootstrap &' >> /etc/rc.local"
+
+  # Premier redémarrage pour exécuter l’installation au prochain boot
   - "reboot"
-
