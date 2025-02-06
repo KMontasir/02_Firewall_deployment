@@ -1,4 +1,14 @@
-# cloud-init configuration pour FreeBSD avec installation d'OPNsense
+#cloud-config
+hostname: "firewall-interne"
+
+users:
+  - name: admin
+    gecos: "Admin User"
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    shell: /bin/sh
+    lock-passwd: false
+    passwd: "$6$b9T6gEnQwVvxM5gV$MIecEzUmOUeJFs4Z/BCKDcbowu0s/0qgVFqLoL3ZEYs18ik6JFBsBXZsXKiu.UuLEKd9VlttjkUh/XSpj90d6/"  # Password --> opnsense
+    
 runcmd:
   # Configuration réseau pour vtnet0
   - "echo 'ifconfig_vtnet0=\"inet 192.168.243.141 netmask 255.255.255.0\"' >> /etc/rc.conf"
@@ -6,9 +16,9 @@ runcmd:
   - "echo 'nameserver 8.8.8.8' > /etc/resolv.conf"
 
   # Forcer la génération des clés SSH immédiatement pour éviter l'affichage plus tard
-  - "ssh-keygen -A"
-  - "service sshd restart"
-  - "sleep 5"
+  #- "ssh-keygen -A"
+  #- "service sshd restart"
+  #- "sleep 5"
 
   # Mise à jour des paquets et installation de fetch (si ce n'est pas déjà le cas)
   - "pkg update -f"
