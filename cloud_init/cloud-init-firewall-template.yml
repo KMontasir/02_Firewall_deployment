@@ -21,7 +21,6 @@ runcmd:
   
   # Vérification réseau
   - "ping -c 3 google.com"
-  - "step 5"
 
   # Télécharger et stocker le script d’installation
   - "fetch -o /usr/local/etc/opnsense-bootstrap.sh https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in"
