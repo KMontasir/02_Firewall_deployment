@@ -8,42 +8,36 @@ users:
     shell: /bin/sh
     lock-passwd: false
     passwd: "$6$b9T6gEnQwVvxM5gV$MIecEzUmOUeJFs4Z/BCKDcbowu0s/0qgVFqLoL3ZEYs18ik6JFBsBXZsXKiu.UuLEKd9VlttjkUh/XSpj90d6/"  # Password --> opnsense
-
-# Configuration réseau à l'aide de cloud-init
-network:
-  version: 2
-  ethernets:
-    vtnet0:
-      dhcp4: no
-      addresses:
-        - 192.168.243.141/24
-      gateway4: 192.168.243.2
-      nameservers:
-        addresses:
-          - 8.8.8.8
-          - 8.8.4.4
-
+    
 runcmd:
+  # Configuration réseau pour vtnet0 (vérifie que tu utilises la bonne interface)
+  - "echo 'ifconfig_vtnet0=\"inet 192.168.243.141 netmask 255.255.255.0\"' >> /etc/rc.conf"
+  - "echo 'defaultrouter=\"192.168.243.2\"' >> /etc/rc.conf"
+  - "echo 'nameserver 8.8.8.8' > /etc/resolv.conf"
+
   # Redémarrer les services réseau pour appliquer la configuration
   - "service netif restart"
   - "service routing restart"
-  
-  # Mise à jour des paquets et installation de fetch (si ce n'est pas déjà le cas)
+  - "sleep 5"
+
+  # Mise à jour des paquets et installation de fetch (si ce n'est pas déjà fait)
   - "pkg bootstrap -f"
   - "pkg update -f"
-  - "pkg upgrade pkg -y"
   - "pkg upgrade -y"
   - "sleep 5"
 
-  # Télécharger le script d'installation OPNsense
-  - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in -o /tmp/opnsense-bootstrap.sh.in"
-  - "sleep 5"
-
+  # Télécharger le script d'installation OPNsense dans un répertoire persistant (/root)
+  - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in -o /root/opnsense-bootstrap.sh.in"
+  
   # Rendre le script exécutable
-  - "chmod +x /tmp/opnsense-bootstrap.sh.in"
+  - "chmod +x /root/opnsense-bootstrap.sh.in"
 
   # Vérification de la présence du fichier
-  - "ls -l /tmp/opnsense-bootstrap.sh.in"
+  - "ls -l /root/opnsense-bootstrap.sh.in"
 
-  # Exécution du script avec confirmation automatique
-  - "ASSUME_ALWAYS_YES=YES sh /tmp/opnsense-bootstrap.sh.in -r 25.1 -y > /tmp/bootstrap.log 2>&1 &"
+  # Exécution du script d'installation d'OPNsense avec confirmation automatique
+  - "ASSUME_ALWAYS_YES=YES sh /root/opnsense-bootstrap.sh.in -r 25.1 -y > /tmp/bootstrap.log 2>&1 &"
+
+  # Vérification du processus d'installation
+  - "while pgrep -f opnsense-bootstrap > /dev/null; do echo 'Installation en cours...'; sleep 15; done"
+  - "echo 'Installation terminée...'"
