@@ -24,6 +24,10 @@ network:
           - 8.8.4.4
 
 runcmd:
+  # Redémarrer les services réseau pour appliquer la configuration
+  - "service netif restart"
+  - "service routing restart"
+  
   # Mise à jour des paquets et installation de fetch (si ce n'est pas déjà le cas)
   - "pkg bootstrap -f"
   - "pkg update -f"
