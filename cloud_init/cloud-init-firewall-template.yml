@@ -34,23 +34,24 @@ runcmd:
   - "sleep 5"
 
   # Télécharger le script d'installation OPNsense
-  - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in -o /tmp/opnsense-bootstrap.sh.in"
+  - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in -o /root/opnsense-bootstrap.sh.in"
   - "sleep 5"
   
   # Vérifier que le fichier est bien téléchargé
-  - "ls -l /tmp/opnsense-bootstrap.sh.in"
+  - "ls -l /root/opnsense-bootstrap.sh.in"
 
   # Rendre le script exécutable
-  - "chmod +x /tmp/opnsense-bootstrap.sh.in"
-  - "sleep 5"
+  - "chmod +x /root/opnsense-bootstrap.sh.in"
 
-  # Exécuter le script en arrière-plan pour éviter l'interruption
-  - "ASSUME_ALWAYS_YES=YES nohup sh /tmp/opnsense-bootstrap.sh.in -r 25.1 > /tmp/bootstrap.log 2>&1 &"
-  - "sleep 10"  # Attente de 5 minutes
+  # Boucle pour attendre que le processus se termine
+  - "while pgrep -f opnsense-bootstrap > /dev/null; do echo 'Installation en cours...'; sleep 30; done"
+  - "echo 'Installation terminée, veuillez redémarrer manuellement.'"
 
   # Vérifier si le processus tourne toujours
   - "ps aux | grep opnsense-bootstrap"
-  - "sleep 10"  # Attente de 5 minutes
+  - "sleep 5"  # Attente de 10 minutes
+  - "ps aux | grep opnsense-bootstrap"
+  - "sleep 5"  # Attente de 10 minutes
 
   # Ne pas redémarrer immédiatement pour éviter d’interrompre le bootstrap
   - "echo 'Installation en cours, veuillez redémarrer manuellement si nécessaire.'"
