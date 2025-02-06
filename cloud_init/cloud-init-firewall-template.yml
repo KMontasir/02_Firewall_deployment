@@ -47,14 +47,6 @@ runcmd:
   - "ASSUME_ALWAYS_YES=YES sh /root/opnsense-bootstrap.sh.in -r 25.1 -y > /tmp/bootstrap.log 2>&1 &"
 
   # Boucle pour attendre que le processus se termine
-  - "while pgrep -f opnsense-bootstrap > /dev/null; do echo 'Installation en cours...'; sleep 30; done"
+  - "while pgrep -f opnsense-bootstrap > /dev/null; do echo 'Installation en cours...'; sleep 15; done"
   - "echo 'Installation terminée, veuillez redémarrer manuellement.'"
-
-  # Vérifier si le processus tourne toujours
-  - "ps aux | grep opnsense-bootstrap"
   - "sleep 5"  # Attente de 5 secondes
-  - "ps aux | grep opnsense-bootstrap"
-  - "sleep 5"  # Attente de 5 secondes
-
-  # Ne pas redémarrer immédiatement pour éviter d’interrompre le bootstrap
-  - "echo 'Installation en cours, veuillez redémarrer manuellement si nécessaire.'"
