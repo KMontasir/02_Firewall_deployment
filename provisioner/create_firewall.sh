@@ -1,6 +1,5 @@
 #cloud-config
 hostname: "firewall-template"
-
 users:
   - name: admin
     gecos: "Admin User"
@@ -8,14 +7,12 @@ users:
     shell: /bin/sh
     lock-passwd: false
     passwd: "$6$b9T6gEnQwVvxM5gV$MIecEzUmOUeJFs4Z/BCKDcbowu0s/0qgVFqLoL3ZEYs18ik6JFBsBXZsXKiu.UuLEKd9VlttjkUh/XSpj90d6/"  # Password --> opnsense
-
 # cloud-init configuration pour FreeBSD avec installation d'OPNsense
 runcmd:
   # Configuration réseau pour vtnet0
   - "echo 'ifconfig_vtnet0=\"inet 192.168.243.141 netmask 255.255.255.0\"' >> /etc/rc.conf"
   - "echo 'defaultrouter=\"192.168.243.2\"' >> /etc/rc.conf"
   - "echo 'nameserver 8.8.8.8' > /etc/resolv.conf"
-
   # Redémarrer les services réseau pour appliquer la configuration
   - "service netif restart"
   - "service routing restart"
@@ -24,33 +21,26 @@ runcmd:
   - "ssh-keygen -A"
   - "service sshd restart"
   - "sleep 5"
-
   # Vérification de la connectivité réseau
   - "ping -c 3 google.com"
   - "sleep 5"
-
   # Mise à jour des paquets
   - "pkg update -f"
   - "sleep 5"
-
   # Télécharger le script d'installation OPNsense
   - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in -o /tmp/opnsense-bootstrap.sh.in"
   - "sleep 5"
   
   # Vérifier que le fichier est bien téléchargé
   - "ls -l /tmp/opnsense-bootstrap.sh.in"
-
   # Rendre le script exécutable
   - "chmod +x /tmp/opnsense-bootstrap.sh.in"
   - "sleep 5"
-
   # Exécuter le script en arrière-plan pour éviter l'interruption
   - "nohup sh /tmp/opnsense-bootstrap.sh.in -r 25.1 > /tmp/bootstrap.log 2>&1 &"
   - "sleep 300"  # Attente de 5 minutes
-
   # Vérifier si le processus tourne toujours
   - "ps aux | grep opnsense-bootstrap"
   - "sleep 300"  # Attente de 5 minutes
-
   # Ne pas redémarrer immédiatement pour éviter d’interrompre le bootstrap
   - "echo 'Installation en cours, veuillez redémarrer manuellement si nécessaire.'"
