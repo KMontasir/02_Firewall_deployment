@@ -12,9 +12,9 @@ users:
 # cloud-init configuration pour FreeBSD avec installation d'OPNsense
 runcmd:
   # Configuration réseau pour vtnet0
-  - "echo 'ifconfig_vtnet0=\"inet 192.168.1.141 netmask 255.255.255.0\"' >> /etc/rc.conf"
-  - "echo 'defaultrouter=\"192.168.1.254\"' >> /etc/rc.conf"
-  - "echo 'nameserver 192.168.1.254' > /etc/resolv.conf"
+  - "echo 'ifconfig_vtnet0=\"inet 192.168.243.141 netmask 255.255.255.0\"' >> /etc/rc.conf"
+  - "echo 'defaultrouter=\"192.168.243.2\"' >> /etc/rc.conf"
+  - "echo 'nameserver 192.168.243.2' > /etc/resolv.conf"
 
   # Redémarrer les services réseau pour appliquer la configuration
   - "service netif restart"
