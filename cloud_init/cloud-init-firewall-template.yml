@@ -23,6 +23,7 @@ runcmd:
   # Mise à jour des paquets et installation de fetch (si ce n'est pas déjà le cas)
   - "pkg bootstrap -f"
   - "pkg update -f"
+  - "pkg upgrade -y"
   - "sleep 5"
 
   # Télécharger le script d'installation OPNsense
