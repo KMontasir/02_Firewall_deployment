@@ -11,9 +11,9 @@ users:
 
 runcmd:
   # Configuration réseau manuelle pour vtnet0
-  - "echo 'ifconfig_vtnet0=\"inet 192.168.243.50 netmask 255.255.255.0\"' >> /etc/rc.conf"
-  - "echo 'defaultrouter=\"192.168.243.2\"' >> /etc/rc.conf"
-  - "echo 'nameserver 8.8.8.8' > /etc/resolv.conf"
+  - "echo 'ifconfig_vtnet0=\"inet 192.168.1.141 netmask 255.255.255.0\"' >> /etc/rc.conf"
+  - "echo 'defaultrouter=\"192.168.1.254\"' >> /etc/rc.conf"
+  - "echo 'nameserver 192.168.1.254' > /etc/resolv.conf"
 
   # Redémarrer les services réseau
   - "service netif restart"
@@ -26,14 +26,14 @@ runcmd:
   - "fetch -o /usr/local/etc/opnsense-bootstrap.sh https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in"
   - "chmod +x /usr/local/etc/opnsense-bootstrap.sh"
 
-  # Création d’un service pour exécuter le bootstrap au prochain redémarrage
-  - "echo '#!/bin/sh' > /usr/local/etc/rc.d/opnsense_bootstrap"
-  - "echo 'nohup sh /usr/local/etc/opnsense-bootstrap.sh -r 25.1 > /var/log/bootstrap.log 2>&1 &' >> /usr/local/etc/rc.d/opnsense_bootstrap"
-  - "echo 'rm -f /usr/local/etc/rc.d/opnsense_bootstrap' >> /usr/local/etc/rc.d/opnsense_bootstrap"
-  - "chmod +x /usr/local/etc/rc.d/opnsense_bootstrap"
-
-  # Activer l'exécution automatique du script
-  - "echo 'sh /usr/local/etc/rc.d/opnsense_bootstrap &' >> /etc/rc.local"
+  # Ajouter l'exécution au prochain boot via /etc/rc.local
+  - "echo '#!/bin/sh' > /etc/rc.local"
+  - "echo 'if [ ! -f /var/log/opnsense_installed ]; then' >> /etc/rc.local"
+  - "echo '  nohup sh /usr/local/etc/opnsense-bootstrap.sh -r 25.1 > /var/log/bootstrap.log 2>&1' >> /etc/rc.local"
+  - "echo '  touch /var/log/opnsense_installed' >> /etc/rc.local"
+  - "echo '  reboot' >> /etc/rc.local"
+  - "echo 'fi' >> /etc/rc.local"
+  - "chmod +x /etc/rc.local"
 
   # Premier redémarrage pour exécuter l’installation au prochain boot
   - "reboot"
