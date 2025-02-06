@@ -14,31 +14,31 @@ runcmd:
   - "echo 'ifconfig_vtnet0=\"inet 192.168.243.141 netmask 255.255.255.0\"' >> /etc/rc.conf"
   - "echo 'defaultrouter=\"192.168.243.2\"' >> /etc/rc.conf"
   - "echo 'nameserver 8.8.8.8' > /etc/resolv.conf"
-
-  # Forcer la génération des clés SSH immédiatement pour éviter l'affichage plus tard
-  #- "ssh-keygen -A"
-  #- "service sshd restart"
-  #- "sleep 5"
+  
+  # Redémarrer les services réseau
+  - "service netif stop && service netif start"
+  - "service routing restart"
+  - "sleep 5"
 
   # Mise à jour des paquets et installation de fetch (si ce n'est pas déjà le cas)
+  - "pkg bootstrap -f"
   - "pkg update -f"
-  - "pkg install -y fetch"
   - "sleep 5"
 
   # Télécharger le script d'installation OPNsense
   - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in -o /root/opnsense-bootstrap.sh.in"
   - "sleep 5"
 
-  # Vérification de la présence du fichier
-  - "ls -l /root/opnsense-bootstrap.sh.in"
-
   # Rendre le script exécutable
   - "chmod +x /root/opnsense-bootstrap.sh.in"
+
+  # Vérification de la présence du fichier
+  - "ls -l /root/opnsense-bootstrap.sh.in"
 
   # Exécution du script avec confirmation automatique
   - "ASSUME_ALWAYS_YES=YES sh /root/opnsense-bootstrap.sh.in -r 25.1 -y > /tmp/bootstrap.log 2>&1 &"
 
   # Attendre que le processus se termine
   - "while pgrep -f opnsense-bootstrap > /dev/null; do echo 'Installation en cours...'; sleep 15; done"
-  - "echo 'Installation terminée, veuillez redémarrer manuellement.'"
+  - "echo 'Installation terminée...'"
   - "sleep 5"
