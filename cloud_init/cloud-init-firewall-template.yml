@@ -18,6 +18,8 @@ runcmd:
   # Redémarrer les services réseau pour appliquer la configuration
   - "service netif restart"
   - "service routing restart"
+  - "ping -c 4 8.8.8.8"
+  - "ping -c 4 google.com"
   - "sleep 5"
 
   # Mise à jour des paquets et installation de fetch (si ce n'est pas déjà fait)
@@ -40,4 +42,5 @@ runcmd:
 
   # Vérification du processus d'installation
   - "while pgrep -f opnsense-bootstrap > /dev/null; do echo 'Installation en cours...'; sleep 15; done"
+  - "ps aux | grep opnsense"
   - "echo 'Installation terminée...'"
