@@ -56,6 +56,9 @@ add_cloudinit_snippet() {
     echo "Ajout du fichier Cloud-init $file_path en tant que snippet..."
     cp "$file_path" "$SNIPPET_PATH/$snippet_name"
     chmod 644 "$SNIPPET_PATH/$snippet_name"
+
+    # Vérification
+    ls -la "$SNIPPET_PATH"
 }
 
 # Fonction pour cloner une VM
