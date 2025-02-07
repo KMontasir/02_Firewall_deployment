@@ -30,12 +30,14 @@ runcmd:
 
   # Télécharger le script d'installation OPNsense dans un répertoire persistant (/root)
   - "fetch https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in -o /root/opnsense-bootstrap.sh.in"
+  - "sleep 5"
   
   # Rendre le script exécutable
   - "chmod +x /root/opnsense-bootstrap.sh.in"
 
   # Vérification de la présence du fichier
   - "ls -l /root/opnsense-bootstrap.sh.in"
+  - "sleep 5"
 
   # Exécution du script d'installation d'OPNsense avec confirmation automatique
   - "ASSUME_ALWAYS_YES=YES sh /root/opnsense-bootstrap.sh.in -r 25.1 -y > /tmp/bootstrap.log 2>&1 &"
@@ -43,4 +45,5 @@ runcmd:
   # Vérification du processus d'installation
   - "while pgrep -f opnsense-bootstrap > /dev/null; do echo 'Installation en cours...'; sleep 15; done"
   - "ps aux | grep opnsense"
+  - "sleep 10"
   - "echo 'Installation terminée...'"
