@@ -9,8 +9,8 @@ CORES=2
 MEMORY=2048
 DISK_SIZE="10G"
 CLOUDINIT_DISK="local:cloudinit"  # Le stockage CloudInit reste sur 'local'
-IMAGE_URL=https://object-storage.public.mtl1.vexxhost.net/swift/v1/1dbafeefbd4f4c80864414a441e72dd2/bsd-cloud-image.org/images/freebsd/14.2/2024-12-08/zfs/freebsd-14.2-zfs-2024-12-08.qcow2
-#IMAGE_URL="https://download.freebsd.org/releases/VM-IMAGES/14.1-RELEASE/amd64/Latest/FreeBSD-14.1-RELEASE-amd64-BASIC-CLOUDINIT-zfs.qcow2.xz"
+#IMAGE_URL=https://object-storage.public.mtl1.vexxhost.net/swift/v1/1dbafeefbd4f4c80864414a441e72dd2/bsd-cloud-image.org/images/freebsd/14.2/2024-12-08/zfs/freebsd-14.2-zfs-2024-12-08.qcow2
+IMAGE_URL="https://download.freebsd.org/releases/VM-IMAGES/14.1-RELEASE/amd64/Latest/FreeBSD-14.1-RELEASE-amd64-BASIC-CLOUDINIT-zfs.qcow2.xz"
 SNIPPETS_DIR="/var/lib/vz/snippets"  # Répertoire des snippets, mais nous allons configurer sans les fichiers manquants
 
 # Vérifier que le répertoire des snippets existe
@@ -49,7 +49,7 @@ create_template() {
 
     # Décompression de l'image
     echo "Décompression de l'image..."
-    #xz -d "$img_file"
+    xz -d "$img_file"
 
     # Création de la VM sans disque (id de la VM, nom, réseau, etc.)
     qm create "$id" --name "$name" --net0 virtio,bridge="$BRIDGE" --scsihw virtio-scsi-single
