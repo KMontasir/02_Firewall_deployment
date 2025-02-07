@@ -8,7 +8,7 @@ POOL_NAME="pare-feu"
 CORES=2
 MEMORY=2048
 DISK_SIZE="20G"
-CLOUDINIT_DISK="${SNIPPET_STORAGE}:cloudinit"
+CLOUDINIT_DISK="${SNIPPET_STORAGE}:snippets"
 
 # VMs et fichiers Cloud-Init
 OPNSENSE_VMS=("template" "Firewall-Relais" "Firewall-Expose" "Firewall-Interne")
