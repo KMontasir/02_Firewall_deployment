@@ -70,11 +70,12 @@ validate_yaml() {
     fi
 }
 
-# Fonction pour cloner une VM
-clone_vm() {
+# Fonction pour cloner une VM et configurer Cloud-init
+clone_and_configure_vm() {
     local vm_id=$1
     local name=$2
     local network_config=$3
+    local cloudinit_file=$4
 
     echo "$(date) - Clonage de la VM $name à partir du template ID $TEMPLATE_ID"
 
@@ -104,34 +105,25 @@ clone_vm() {
     [ -n "${networks[1]}" ] && qm set "$vm_id" --net1 virtio,bridge="${networks[1]},firewall=1"
     [ -n "${networks[2]}" ] && qm set "$vm_id" --net2 virtio,bridge="${networks[2]},firewall=1"
 
-    # Activer CloudInit
+    # Ajouter le disque Cloud-init
     qm set "$vm_id" --ide2 "$CLOUDINIT_DISK,media=cdrom"
 
-    echo "$(date) - VM $name clonée et ajoutée au pool '$POOL_NAME'."
-    sleep 5
-}
-
-# Fonction pour appliquer Cloud-init
-apply_cloudinit() {
-    local vm_id=$1
-    local cloudinit_file=$2
-    local snippet_name=$(basename "$cloudinit_file")
-
-    echo "$(date) - Application du fichier Cloud-init pour la VM $vm_id"
-    
-    # Valider et ajouter le fichier Cloud-init
+    # Valider et appliquer Cloud-init
     validate_yaml "$cloudinit_file"
     add_cloudinit_snippet "$cloudinit_file"
+    qm set "$vm_id" --cicustom "user=snippets:snippets/$(basename "$cloudinit_file")"
 
-    qm set "$vm_id" --cicustom "user=snippets:snippets/$snippet_name"
+    echo "$(date) - VM $name clonée et ajoutée au pool '$POOL_NAME' avec Cloud-init."
+    sleep 5
+
+    # Démarrer la VM
     qm start "$vm_id"
-    echo "$(date) - Cloud-init appliqué à la VM $vm_id."
+    echo "$(date) - VM $name démarrée avec Cloud-init appliqué."
 }
 
 # Création et configuration des VMs
 for i in "${!OPNSENSE_VMS[@]}"; do
-    clone_vm "${VM_IDS[$i]}" "${OPNSENSE_VMS[$i]}" "${NETWORK_CONFIGS[$i]}"
-    apply_cloudinit "${VM_IDS[$i]}" "${CLOUDINIT_FILES[$i]}"
+    clone_and_configure_vm "${VM_IDS[$i]}" "${OPNSENSE_VMS[$i]}" "${NETWORK_CONFIGS[$i]}" "${CLOUDINIT_FILES[$i]}"
 done
 
-echo "$(date) - Toutes les VMs OPNsense sont créées et configurées avec Cloud-init."
+echo "$(date) - Toutes les VMs OPNsense sont créées, clonées et configurées avec Cloud-init."
