@@ -55,4 +55,75 @@ add_cloudinit_snippet() {
 
     echo "$(date) - Ajout du fichier Cloud-init $file_path en tant que snippet..."
     cp "$file_path" "$SNIPPET_PATH/$snippet_name"
-    chmod
+    chmod 644 "$SNIPPET_PATH/$snippet_name"
+
+    # Vérification
+    ls -la "$SNIPPET_PATH"
+}
+
+# Fonction pour vérifier si un fichier YAML est valide
+validate_yaml() {
+    local file_path=$1
+    if ! python3 -c 'import yaml, sys; yaml.safe_load(sys.stdin)' < "$file_path" > /dev/null; then
+        echo "$(date) - Erreur: Le fichier Cloud-init $file_path est invalide."
+        exit 1
+    fi
+}
+
+# Fonction pour cloner une VM et configurer Cloud-init
+clone_and_configure_vm() {
+    local vm_id=$1
+    local name=$2
+    local network_config=$3
+    local cloudinit_file=$4
+
+    echo "$(date) - Clonage de la VM $name à partir du template ID $TEMPLATE_ID"
+
+    # Supprimer la VM si elle existe déjà
+    if qm list | grep -q "^$vm_id"; then
+        echo "$(date) - La VM $vm_id existe déjà, suppression..."
+        qm stop "$vm_id" --skiplock
+        sleep 5
+        qm destroy "$vm_id" --destroy-unreferenced-disks 1
+    fi
+
+    # Cloner la VM
+    qm clone "$TEMPLATE_ID" "$vm_id" --name "$name" --full --storage "$VM_STORAGE"
+
+    # Ajouter au pool sans écraser les autres VMs
+    VM_IDS_LIST=$(pvesh get /pools/"$POOL_NAME" | grep -o '"vms":[^]]*' | sed 's/"vms":\[\([^]]*\)\]/\1/')
+    VM_IDS_LIST="$VM_IDS_LIST,$vm_id"
+    pvesh set /pools/"$POOL_NAME" -vms "$VM_IDS_LIST"
+
+    # Configurer CPU, RAM, disque
+    qm set "$vm_id" --cpu host --cores "$CORES" --memory "$MEMORY"
+    qm resize "$vm_id" scsi0 "$DISK_SIZE"
+
+    # Configurer les interfaces réseau
+    IFS=',' read -r -a networks <<< "$network_config"
+    qm set "$vm_id" --net0 virtio,bridge="${networks[0]},firewall=1"
+    [ -n "${networks[1]}" ] && qm set "$vm_id" --net1 virtio,bridge="${networks[1]},firewall=1"
+    [ -n "${networks[2]}" ] && qm set "$vm_id" --net2 virtio,bridge="${networks[2]},firewall=1"
+
+    # Ajouter le disque Cloud-init
+    qm set "$vm_id" --ide2 "$CLOUDINIT_DISK,media=cdrom"
+
+    # Valider et appliquer Cloud-init
+    validate_yaml "$cloudinit_file"
+    add_cloudinit_snippet "$cloudinit_file"
+    qm set "$vm_id" --cicustom "user=snippets:snippets/$(basename "$cloudinit_file")"
+
+    echo "$(date) - VM $name clonée et ajoutée au pool '$POOL_NAME' avec Cloud-init."
+    sleep 5
+
+    # Démarrer la VM
+    qm start "$vm_id"
+    echo "$(date) - VM $name démarrée avec Cloud-init appliqué."
+}
+
+# Création et configuration des VMs
+for i in "${!OPNSENSE_VMS[@]}"; do
+    clone_and_configure_vm "${VM_IDS[$i]}" "${OPNSENSE_VMS[$i]}" "${NETWORK_CONFIGS[$i]}" "${CLOUDINIT_FILES[$i]}"
+done
+
+echo "$(date) - Toutes les VMs OPNsense sont créées, clonées et configurées avec Cloud-init."
