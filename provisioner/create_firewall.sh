@@ -9,7 +9,7 @@ MEMORY=2048
 DISK_SIZE="20G"
 CLOUDINIT_DISK="${SNIPPET_STORAGE}:cloudinit"  # Cloud-Init reste sur "local"
 # Variables pour les VMs OPNsense
-OPNSENSE_VMS=("template" "opnsense1" "opnsense2" "opnsense3")
+OPNSENSE_VMS=("template" "Firewall-Relais" "Firewall-Expose" "Firewall-Interne")
 VM_IDS=(9998 1001 1002 1003)
 # Chemins vers les fichiers Cloud-init spécifiques
 CLOUDINIT_FILES=( 
