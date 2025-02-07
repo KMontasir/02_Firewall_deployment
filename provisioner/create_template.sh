@@ -2,20 +2,20 @@
 
 # Variables communes
 TEMPLATE_DIR="/root/02_Firewall_deployment/cloud_init/cloud-version"
-STORAGE_POOL="local-lvm-vm"  # Le pool de stockage pour le template
-POOL_TEMPLATE="template"     # Le pool dans lequel la VM doit être ajoutée
+STORAGE_POOL="local-lvm"  # Assurez-vous que ce pool existe !
+POOL_TEMPLATE="template"   # Le pool auquel la VM doit être ajoutée
 BRIDGE="vmbr0"
 CORES=2
 MEMORY=2048
 DISK_SIZE="10G"
-CLOUDINIT_DISK="snippets:snippets"  # Le stockage CloudInit reste sur 'local'
+CLOUDINIT_DISK="snippets:cloudinit"  # Fix du chemin du stockage CloudInit
 IMAGE_URL="https://object-storage.public.mtl1.vexxhost.net/swift/v1/1dbafeefbd4f4c80864414a441e72dd2/bsd-cloud-image.org/images/freebsd/14.2/2024-12-08/zfs/freebsd-14.2-zfs-2024-12-08.qcow2"
-SNIPPETS_DIR="/var/lib/vz/snippets"  # Répertoire des snippets, mais nous allons configurer sans les fichiers manquants
+SNIPPETS_DIR="/var/lib/vz/snippets"  # Répertoire contenant les fichiers Cloud-Init
 
 # Vérifier que le répertoire des snippets existe
 if [ ! -d "$SNIPPETS_DIR" ]; then
-    echo "Erreur : Le répertoire des snippets ($SNIPPETS_DIR) n'existe pas."
-    exit 1
+    echo "Erreur : Le répertoire des snippets ($SNIPPETS_DIR) n'existe pas. Création..."
+    mkdir -p "$SNIPPETS_DIR"
 fi
 
 # Fonction pour créer le template et l'ajouter au pool "template"
@@ -46,14 +46,14 @@ create_template() {
         exit 1
     fi
 
-    # Décompression de l'image
-    #echo "Décompression de l'image..."
-    #xz -d "$img_file"
+    # Décompression de l'image si nécessaire
+    echo "Décompression de l'image..."
+    xz -d "$img_file"
 
-    # Création de la VM sans disque (id de la VM, nom, réseau, etc.) et utiliser seabios pour désactiver l'UEFI
+    # Création de la VM sans disque
     qm create "$id" --name "$name" --net0 virtio,bridge="$BRIDGE" --scsihw virtio-scsi-single --bios seabios
 
-    # Importer l'image dans le stockage local-lvm-vm
+    # Importer l'image dans le stockage local-lvm
     echo "Importation de l'image disque dans Proxmox..."
     qm importdisk "$id" "${TEMPLATE_DIR}/${name}/${img_uncompressed}" "$STORAGE_POOL"
 
@@ -63,7 +63,7 @@ create_template() {
     # Redimensionner le disque
     qm disk resize "$id" scsi0 "$DISK_SIZE"
 
-    # Configuration de l'ordre de démarrage pour la VM en utilisant le BIOS
+    # Configuration de l'ordre de démarrage pour la VM
     qm set "$id" --boot order=scsi0 --bios seabios
 
     # Configuration des ressources de la VM
@@ -75,17 +75,21 @@ create_template() {
     # Activer l'agent QEMU (important pour CloudInit)
     qm set "$id" --agent enabled=1
 
+    # Appliquer la configuration Cloud-Init
+    if [ -f "$SNIPPETS_DIR/user-data" ]; then
+        qm set "$id" --cicustom "user=snippets:user-data"
+    fi
+
     # Marquer cette VM comme un template
-    qm template "$id"  # Conversion de la VM en template
+    qm template "$id"
 
     # Ajouter la VM au pool "template"
     pvesh set /pools/"$POOL_TEMPLATE" -vms "$id"
 
-    cd ..  # Revenir au répertoire précédent
     echo "Fin de création du template $name et ajout au pool $POOL_TEMPLATE"
 }
 
 # Création du template avec FreeBSD CloudInit officiel
 create_template 9999 "freebsd-14-cloudinit" "$IMAGE_URL"
 
-echo "Fin de création du paramétrage de base de Proxmox avec le template FreeBSD 14.1"
+echo "Fin de création du paramétrage de base de Proxmox avec le template FreeBSD 14.2"
