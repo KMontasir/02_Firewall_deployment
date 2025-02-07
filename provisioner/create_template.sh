@@ -8,14 +8,21 @@ BRIDGE="vmbr0"
 CORES=2
 MEMORY=2048
 DISK_SIZE="10G"
-CLOUDINIT_DISK="snippets:cloudinit"  # Fix du chemin du stockage CloudInit
+CLOUDINIT_DISK="snippets:snippets/user-data"  # Correction du chemin CloudInit
 IMAGE_URL="https://object-storage.public.mtl1.vexxhost.net/swift/v1/1dbafeefbd4f4c80864414a441e72dd2/bsd-cloud-image.org/images/freebsd/14.2/2024-12-08/zfs/freebsd-14.2-zfs-2024-12-08.qcow2"
 SNIPPETS_DIR="/var/lib/vz/snippets"  # Répertoire contenant les fichiers Cloud-Init
 
 # Vérifier que le répertoire des snippets existe
 if [ ! -d "$SNIPPETS_DIR" ]; then
-    echo "Erreur : Le répertoire des snippets ($SNIPPETS_DIR) n'existe pas. Création..."
+    echo "Création du répertoire des snippets : $SNIPPETS_DIR"
     mkdir -p "$SNIPPETS_DIR"
+    chmod 755 "$SNIPPETS_DIR"
+fi
+
+# Vérifier si le pool "template" existe, sinon le créer
+if ! pvesh get /pools | grep -q "\"$POOL_TEMPLATE\""; then
+    echo "Création du pool '$POOL_TEMPLATE'..."
+    pvesh create /pools -poolid "$POOL_TEMPLATE"
 fi
 
 # Fonction pour créer le template et l'ajouter au pool "template"
@@ -24,7 +31,13 @@ create_template() {
     local name=$2
     local url=$3
     local img_file=$(basename "$url")
-    local img_uncompressed="${img_file%.xz}"  # Supprime l'extension .xz
+
+    # Vérifier si l'image est compressée en .xz
+    if [[ "$img_file" == *.xz ]]; then
+        local img_uncompressed="${img_file%.xz}"  # Supprime l'extension .xz
+    else
+        local img_uncompressed="$img_file"
+    fi
 
     # Vérifier si la VM existe déjà
     if qm list | awk '{print $1}' | grep -q "^$id$"; then
@@ -36,19 +49,25 @@ create_template() {
 
     # Création d'un répertoire pour le template
     mkdir -p "$TEMPLATE_DIR/$name"
-    cd "$TEMPLATE_DIR/$name"
+    cd "$TEMPLATE_DIR/$name" || exit
 
     # Télécharger l'image depuis l'URL officielle
-    echo "Téléchargement de l'image FreeBSD CloudInit..."
-    wget -q --show-progress "$url" -O "$img_file"
-    if [ $? -ne 0 ]; then
-        echo "Erreur : Échec du téléchargement de l’image !"
-        exit 1
+    if [ ! -f "$img_file" ]; then
+        echo "Téléchargement de l'image FreeBSD CloudInit..."
+        wget -q --show-progress "$url" -O "$img_file"
+        if [ $? -ne 0 ]; then
+            echo "Erreur : Échec du téléchargement de l’image !"
+            exit 1
+        fi
+    else
+        echo "L'image FreeBSD existe déjà, pas besoin de télécharger."
     fi
 
     # Décompression de l'image si nécessaire
-    echo "Décompression de l'image..."
-    xz -d "$img_file"
+    if [[ "$img_file" == *.xz ]]; then
+        echo "Décompression de l'image..."
+        xz -d "$img_file"
+    fi
 
     # Création de la VM sans disque
     qm create "$id" --name "$name" --net0 virtio,bridge="$BRIDGE" --scsihw virtio-scsi-single --bios seabios
