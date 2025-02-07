@@ -9,7 +9,6 @@ CORES=2
 MEMORY=2048
 DISK_SIZE="10G"
 CLOUDINIT_DISK="local:cloudinit"  # Le stockage CloudInit reste sur 'local'
-#IMAGE_URL=https://object-storage.public.mtl1.vexxhost.net/swift/v1/1dbafeefbd4f4c80864414a441e72dd2/bsd-cloud-image.org/images/freebsd/14.2/2024-12-08/zfs/freebsd-14.2-zfs-2024-12-08.qcow2
 IMAGE_URL="https://download.freebsd.org/releases/VM-IMAGES/14.1-RELEASE/amd64/Latest/FreeBSD-14.1-RELEASE-amd64-BASIC-CLOUDINIT-zfs.qcow2.xz"
 SNIPPETS_DIR="/var/lib/vz/snippets"  # Répertoire des snippets, mais nous allons configurer sans les fichiers manquants
 
@@ -71,14 +70,10 @@ create_template() {
     qm set "$id" --cpu host --cores "$CORES" --memory "$MEMORY"
 
     # Ajouter le disque CloudInit pour la configuration
-    # Nous utilisons un disque Cloud-init par défaut, pas de besoin d'un fichier user-data
-    qm set "$id" --ide2 "$CLOUDINIT_DISK"
+    qm set "$id" --ide2 "$CLOUDINIT_DISK,media=cdrom"
 
     # Activer l'agent QEMU (important pour CloudInit)
     qm set "$id" --agent enabled=1
-
-    # Activer l'UEFI si nécessaire (FreeBSD peut en avoir besoin)
-    qm set "$id" --bios ovmf --efidisk0 "$STORAGE_POOL:vm-${id}-efidisk,format=raw,efitype=4m"
 
     # Marquer cette VM comme un template
     qm template "$id"  # Conversion de la VM en template
