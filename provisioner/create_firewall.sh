@@ -70,7 +70,7 @@ clone_vm() {
     if qm status "$vm_id" &>/dev/null; then
         echo "La VM $vm_id existe déjà, suppression en cours..."
         qm stop "$vm_id" --skiplock
-        sleep 2
+        sleep 5
         qm destroy "$vm_id" --destroy-unreferenced-disks 1
     fi
     # Cloner la VM à partir du template
@@ -88,9 +88,7 @@ clone_vm() {
     qm set "$vm_id" --net2 virtio,bridge="${networks[2]},firewall=1"
     # Activer CloudInit
     qm set "$vm_id" --ide2 "$CLOUDINIT_DISK,media=cdrom"
-    # Démarrer la VM clonée
-    qm start "$vm_id"
-    echo "VM $name clonée, ajoutée au pool '$POOL_NAME' et démarrée."
+    echo "VM $name clonée, ajoutée au pool '$POOL_NAME'."
     sleep 5
 }
 # Fonction pour appliquer un fichier Cloud-init spécifique
@@ -103,9 +101,7 @@ apply_cloudinit() {
     add_cloudinit_snippet "$cloudinit_file"
     # Associer le fichier Cloud-init à la VM
     qm set "$vm_id" --cicustom "user=$SNIPPET_STORAGE:snippets/$snippet_name"
-    # Redémarrer la VM pour appliquer Cloud-init
-    qm stop "$vm_id"
-    sleep 2
+    # Démarrer la VM pour appliquer Cloud-init
     qm start "$vm_id"
     echo "Cloud-init appliqué à la VM $vm_id."
 }
