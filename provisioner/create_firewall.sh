@@ -105,7 +105,7 @@ apply_cloudinit() {
 
     echo "Application du fichier Cloud-init pour la VM $vm_id"
     add_cloudinit_snippet "$cloudinit_file"
-    qm set "$vm_id" --cicustom "user=snippets:$snippet_name"
+    qm set "$vm_id" --cicustom "user=snippets:snippets/$snippet_name"
     qm start "$vm_id"
     echo "Cloud-init appliqué à la VM $vm_id."
 }
