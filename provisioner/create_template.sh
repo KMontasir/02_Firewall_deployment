@@ -8,7 +8,7 @@ BRIDGE="vmbr0"
 CORES=2
 MEMORY=2048
 DISK_SIZE="10G"
-CLOUDINIT_DISK="local:cloudinit"  # Le stockage CloudInit reste sur 'local'
+CLOUDINIT_DISK="snippets:snippets"  # Le stockage CloudInit reste sur 'local'
 IMAGE_URL="https://object-storage.public.mtl1.vexxhost.net/swift/v1/1dbafeefbd4f4c80864414a441e72dd2/bsd-cloud-image.org/images/freebsd/14.2/2024-12-08/zfs/freebsd-14.2-zfs-2024-12-08.qcow2"
 SNIPPETS_DIR="/var/lib/vz/snippets"  # Répertoire des snippets, mais nous allons configurer sans les fichiers manquants
 
