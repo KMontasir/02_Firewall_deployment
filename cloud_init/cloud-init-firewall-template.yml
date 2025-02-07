@@ -10,9 +10,9 @@ users:
     passwd: "$6$b9T6gEnQwVvxM5gV$MIecEzUmOUeJFs4Z/BCKDcbowu0s/0qgVFqLoL3ZEYs18ik6JFBsBXZsXKiu.UuLEKd9VlttjkUh/XSpj90d6/"
 
 runcmd:
-  - echo 'ifconfig_vtnet0="inet 192.168.243.141 netmask 255.255.255.0"' >> /etc/rc.conf
-  - echo 'defaultrouter="192.168.243.2"' >> /etc/rc.conf
-  - echo 'nameserver 8.8.8.8' > /etc/resolv.conf
+  - echo 'ifconfig_vtnet0="inet 192.168.1.141 netmask 255.255.255.0"' >> /etc/rc.conf
+  - echo 'defaultrouter="192.168.1.254"' >> /etc/rc.conf
+  - echo 'nameserver 192.168.1.254' > /etc/resolv.conf
   - service netif restart
   - service routing restart
   - sleep 5
