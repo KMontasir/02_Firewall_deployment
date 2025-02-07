@@ -13,7 +13,7 @@ CLOUDINIT_DISK="${SNIPPET_STORAGE}:cloudinit"  # Correction du stockage Cloud-In
 # Liste des VMs et fichiers Cloud-Init
 OPNSENSE_VMS=("template" "Firewall-Relais" "Firewall-Expose" "Firewall-Interne")
 VM_IDS=(9998 1001 1002 1003)
-CLOUDINIT_FILES=(
+CLOUDINIT_FILES=( 
   "/root/02_Firewall_deployment/cloud_init/cloud-init-firewall-template.yml"
   "/root/02_Firewall_deployment/cloud_init/cloud-init-firewall-1.yml"
   "/root/02_Firewall_deployment/cloud_init/cloud-init-firewall-2.yml"
@@ -49,11 +49,11 @@ add_cloudinit_snippet() {
     local snippet_name=$(basename "$file_path")
 
     if [ ! -f "$file_path" ]; then
-        echo "$(date) - ❌ Erreur: Le fichier Cloud-init $file_path n'existe pas."
+        echo "$(date) - Erreur: Le fichier Cloud-init $file_path n'existe pas."
         exit 1
     fi
 
-    echo "$(date) - 📄 Ajout du fichier Cloud-init $file_path en tant que snippet..."
+    echo "$(date) - Ajout du fichier Cloud-init $file_path en tant que snippet..."
     cp "$file_path" "$SNIPPET_PATH/$snippet_name"
     chmod 644 "$SNIPPET_PATH/$snippet_name"
 
@@ -65,7 +65,7 @@ add_cloudinit_snippet() {
 validate_yaml() {
     local file_path=$1
     if ! python3 -c 'import yaml, sys; yaml.safe_load(sys.stdin)' < "$file_path" > /dev/null; then
-        echo "$(date) - ❌ Erreur: Le fichier Cloud-init $file_path est invalide."
+        echo "$(date) - Erreur: Le fichier Cloud-init $file_path est invalide."
         exit 1
     fi
 }
@@ -77,11 +77,11 @@ clone_and_configure_vm() {
     local network_config=$3
     local cloudinit_file=$4
 
-    echo "$(date) - 🔄 Clonage de la VM $name à partir du template ID $TEMPLATE_ID"
+    echo "$(date) - Clonage de la VM $name à partir du template ID $TEMPLATE_ID"
 
     # Supprimer la VM si elle existe déjà
     if qm list | grep -q "^$vm_id"; then
-        echo "$(date) - 🔥 La VM $vm_id existe déjà, suppression..."
+        echo "$(date) - La VM $vm_id existe déjà, suppression..."
         qm stop "$vm_id" --skiplock
         sleep 5
         qm destroy "$vm_id" --destroy-unreferenced-disks 1
@@ -90,7 +90,7 @@ clone_and_configure_vm() {
     # Cloner la VM
     qm clone "$TEMPLATE_ID" "$vm_id" --name "$name" --full --storage "$VM_STORAGE"
     if [ $? -ne 0 ]; then
-        echo "$(date) - ❌ Erreur lors du clonage de la VM $name"
+        echo "$(date) - Erreur lors du clonage de la VM $name"
         exit 1
     fi
 
@@ -117,12 +117,12 @@ clone_and_configure_vm() {
     add_cloudinit_snippet "$cloudinit_file"
     qm set "$vm_id" --cicustom "user=snippets/$(basename "$cloudinit_file")"
 
-    echo "$(date) - ✅ VM $name clonée et ajoutée au pool '$POOL_NAME' avec Cloud-Init."
+    echo "$(date) - VM $name clonée et ajoutée au pool '$POOL_NAME' avec Cloud-Init."
     sleep 5
 
     # Démarrer la VM
     qm start "$vm_id"
-    echo "$(date) - 🚀 VM $name démarrée avec Cloud-Init appliqué."
+    echo "$(date) - VM $name démarrée avec Cloud-Init appliqué."
 }
 
 # Création et configuration des VMs
@@ -130,4 +130,4 @@ for i in "${!OPNSENSE_VMS[@]}"; do
     clone_and_configure_vm "${VM_IDS[$i]}" "${OPNSENSE_VMS[$i]}" "${NETWORK_CONFIGS[$i]}" "${CLOUDINIT_FILES[$i]}"
 done
 
-echo "$(date) - 🎉 Toutes les VMs OPNsense sont créées et configurées avec Cloud-Init."
+echo "$(date) - Toutes les VMs OPNsense sont créées et configurées avec Cloud-Init."
