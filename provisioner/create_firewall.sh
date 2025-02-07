@@ -12,7 +12,7 @@ CLOUDINIT_DISK="${SNIPPET_STORAGE}:cloudinit"  # Correction du stockage Cloud-In
 
 # Liste des VMs et fichiers Cloud-Init
 OPNSENSE_VMS=("template" "Firewall-Relais" "Firewall-Expose" "Firewall-Interne")
-VM_IDS=(9998 1001 1002 1003)
+VM_IDS=(1999 1001 1002 1003)
 CLOUDINIT_FILES=( 
   "/root/02_Firewall_deployment/cloud_init/cloud-init-firewall-template.yml"
   "/root/02_Firewall_deployment/cloud_init/cloud-init-firewall-1.yml"
