@@ -88,16 +88,42 @@ create_template() {
     # Configuration des ressources de la VM
     qm set "$id" --cpu host --cores "$CORES" --memory "$MEMORY"
 
-    # Ajouter le disque CloudInit pour la configuration
+    # Ajouter le disque Cloud-Init pour la configuration
     qm set "$id" --ide2 "$CLOUDINIT_DISK,media=cdrom"
 
-    # Activer l'agent QEMU (important pour CloudInit)
+    # Activer l'agent QEMU (important pour Cloud-Init)
     qm set "$id" --agent enabled=1
 
-    # Appliquer la configuration Cloud-Init
-    if [ -f "$SNIPPETS_DIR/user-data" ]; then
-        qm set "$id" --cicustom "user=snippets:user-data"
-    fi
+    # Créer le fichier user-data Cloud-Init (configuration utilisateur et réseau)
+    cat <<EOF > "$SNIPPETS_DIR/user-data"
+#cloud-config
+hostname: $name
+users:
+  - name: admin
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    groups: sudo
+    lock_passwd: false
+    passwd: \$6\$rounds=4096\$SalTovPfoBlv\$GlnrwVfg0hl0yJcO69u6KYVjNcxU.GQCGzgmvDZ6Q3k0SeJt9N4tYOuAI3V0mADceoa2F4lg5pZj6cZWZYoeuQ==  # Mot de passe crypté (par exemple, admin/admin)
+timezone: Europe/Paris
+
+# Réseaux
+network:
+  version: 2
+  ethernets:
+    vtnet0:
+      dhcp4: true
+EOF
+
+    # Appliquer le fichier Cloud-Init user-data
+    qm set "$id" --cicustom "user=snippets/user-data"
+
+    # Créer le fichier meta-data (ID et nom de la machine)
+    echo "instance-id: $id" > "$SNIPPETS_DIR/meta-data"
+    echo "local-hostname: $name" >> "$SNIPPETS_DIR/meta-data"
+
+    # Appliquer le fichier meta-data
+    qm set "$id" --cicustom "meta=snippets/meta-data"
 
     # Marquer cette VM comme un template
     qm template "$id"
