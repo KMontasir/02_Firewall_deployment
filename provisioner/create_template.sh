@@ -50,8 +50,8 @@ create_template() {
     echo "Décompression de l'image..."
     xz -d "$img_file"
 
-    # Création de la VM sans disque (id de la VM, nom, réseau, etc.)
-    qm create "$id" --name "$name" --net0 virtio,bridge="$BRIDGE" --scsihw virtio-scsi-single
+    # Création de la VM sans disque (id de la VM, nom, réseau, etc.) et utiliser seabios pour désactiver l'UEFI
+    qm create "$id" --name "$name" --net0 virtio,bridge="$BRIDGE" --scsihw virtio-scsi-single --bios seabios
 
     # Importer l'image dans le stockage local-lvm-vm
     echo "Importation de l'image disque dans Proxmox..."
@@ -63,8 +63,8 @@ create_template() {
     # Redimensionner le disque
     qm disk resize "$id" scsi0 "$DISK_SIZE"
 
-    # Configuration de l'ordre de démarrage pour la VM
-    qm set "$id" --boot order=scsi0
+    # Configuration de l'ordre de démarrage pour la VM en utilisant le BIOS
+    qm set "$id" --boot order=scsi0 --bios seabios
 
     # Configuration des ressources de la VM
     qm set "$id" --cpu host --cores "$CORES" --memory "$MEMORY"
