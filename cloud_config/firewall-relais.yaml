@@ -1,0 +1,71 @@
+#cloud-config
+hostname: "firewall-relais"
+
+users:
+  - name: admin
+    gecos: "Admin User"
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    shell: /bin/sh
+    lock-passwd: false
+    passwd: "$6$b9T6gEnQwVvxM5gV$MIecEzUmOUeJFs4Z/BCKDcbowu0s/0qgVFqLoL3ZEYs18ik6JFBsBXZsXKiu.UuLEKd9VlttjkUh/XSpj90d6/"
+
+write_files:
+  - path: /etc/rc.conf
+    content: |
+      # Configuration des interfaces réseau
+      #ifconfig_vtnet0="DHCP"  # WAN (vmbr0)
+      ifconfig_vtnet0="inet 192.168.119.131 netmask 255.255.255.0"
+      #nameserver="192.168.119.2"
+      
+      ifconfig_vtnet1="inet 172.16.1.6 netmask 255.255.255.0"  # LAN (vmbr4)
+      ifconfig_vtnet2="up"
+      
+      # VLAN Configuration (OPT1)
+      cloned_interfaces="vlan50 vlan60"
+      ifconfig_vlan50="inet 172.16.50.14 netmask 255.255.255.240 vlan 50 vlandev vtnet2"
+      ifconfig_vlan60="inet 172.16.60.14 netmask 255.255.255.240 vlan 60 vlandev vtnet2"
+
+      # Passerelles
+      defaultrouter="192.168.119.2"  # Passerelle pour le WAN (interface vtnet0)
+      route_vlan50="172.16.50.13"   # Passerelle pour le VLAN50
+      
+      # Activer NAT et PF
+      gateway_enable="YES"
+      pf_enable="YES"
+      
+      # Configuration des routes statiques persistantes
+      static_routes="route1 route2 route3 route4 route5"
+      route_route1="172.16.5.0/24 172.16.50.13"
+      route_route2="172.16.10.0/24 172.16.50.13"
+      route_route3="172.16.20.0/27 172.16.50.13"
+      route_route4="172.16.30.0/27 172.16.50.13"
+      route_route5="172.16.40.0/27 172.16.50.13"
+
+  - path: /etc/pf.conf
+    content: |
+      # Options globales
+      set skip on lo
+      
+      # Normalisation
+      scrub in all
+      
+      # NAT Configuration
+      nat on vtnet0 from 172.16.1.0/24 to any -> (vtnet0)
+      nat on vtnet0 from 172.16.50.0/28 to any -> (vtnet0)
+      nat on vtnet0 from 172.16.60.0/28 to any -> (vtnet0)
+      
+      # Firewall Rules
+      pass in on vtnet1 from 172.16.1.0/24 to any
+      pass in on vlan50 from 172.16.50.0/28 to any
+      pass in on vlan60 from 172.16.60.0/28 to any
+      pass out on vtnet0 from any to any
+
+  - path: /etc/sysctl.conf
+    content: |
+      net.inet.ip.forwarding=1
+      #net.inet6.ip.forwarding=1  # Activation IPv6 si nécessaire
+
+  - path: /etc/resolv.conf
+    content: |
+      nameserver 192.168.119.2
+      #nameserver 8.8.8.8  # DNS secondaire

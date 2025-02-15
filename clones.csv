@@ -1,0 +1,15 @@
+TEMPLATE_ID,CLONE_ID,VM_NAME,CLOUDINIT_FILE
+
+13000,14000,opnsense.template,opnsense_template.yaml
+
+11000,11100,debian.web.template,debian_web_template.yaml
+11000,11200,debian.reverseproxy.template,debian_reverseproxy_template.yaml
+11000,11300,debian.bastion.template,debian_reverseproxy_template.yaml
+11000,11400,debian.edr.template,debian_edr_template.yaml
+11000,11500,debian.dns.template,debian_dns_template.yaml
+
+12000,12100,arch.web.template,arch_web_template.yaml
+12000,12200,arch.reverseproxy.template,arch_reverseproxy_template.yaml
+12000,12300,arch.bastion.template,arch_bastion_template.yaml
+12000,12400,arch.edr.template,arch_edr_template.yaml
+12000,12500,arch.dns.template,arch_dns_template.yaml

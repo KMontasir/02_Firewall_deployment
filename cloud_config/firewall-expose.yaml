@@ -1,0 +1,67 @@
+#cloud-config
+hostname: "firewall-expose"
+
+users:
+  - name: admin
+    gecos: "Admin User"
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    shell: /bin/sh
+    lock-passwd: false
+    passwd: "$6$b9T6gEnQwVvxM5gV$MIecEzUmOUeJFs4Z/BCKDcbowu0s/0qgVFqLoL3ZEYs18ik6JFBsBXZsXKiu.UuLEKd9VlttjkUh/XSpj90d6/"
+
+write_files:
+  - path: /etc/rc.conf
+    content: |
+      # Interfaces configuration
+      ifconfig_vtnet0="inet 172.16.50.13 netmask 255.255.255.240" # WAN (vmbr1)
+      ifconfig_vtnet1="inet 172.16.1.7 netmask 255.255.255.0" # LAN (vmbr4)
+      ifconfig_vtnet2="up"
+      
+      # VLAN Configuration (OPT1)
+      vlan30="vlan 30 vlandev vtnet2"
+      ifconfig_vlan30="inet 172.16.30.30 netmask 255.255.255.224" # VLAN 30 (OPT1 vmbr2)
+      
+      vlan40="vlan 40 vlandev vtnet2"
+      ifconfig_vlan40="inet 172.16.40.30 netmask 255.255.255.224" # VLAN 40 (OPT1 vmbr2)
+
+      # Passerelles
+      defaultrouter="172.16.50.14"  # Passerelle pour le WAN (interface vtnet1)
+      route_vlan30="172.16.30.29"   # Passerelle pour le VLAN30
+
+      # Enable NAT and Firewall
+      gateway_enable="YES"
+      pf_enable="YES"
+
+      # Configuration des routes statiques persistantes
+      static_routes="route1 route2 route3 route4"
+      route_route1="-net 172.16.5.0/24 172.16.30.29"
+      route_route2="-net 172.16.10.0/24 172.16.30.29"
+      route_route3="-net 172.16.20.0/27 172.16.30.29"
+      #route_route4="-net 172.16.60.0/28 172.16.50.14"
+
+  - path: /etc/pf.conf
+    content: |
+      # Options globales
+      set skip on lo
+
+      # Normalisation
+      scrub in all
+
+      # NAT (Traduction)
+      nat on vtnet0 from 172.16.1.0/24 to any -> (vtnet0)
+      nat on vtnet0 from 172.16.30.0/27 to any -> (vtnet0)
+      nat on vtnet0 from 172.16.40.0/27 to any -> (vtnet0)
+
+      # Règles de filtrage
+      pass in on vtnet1 from 172.16.1.0/24 to any
+      pass in on vlan30 from 172.16.30.0/27 to any
+      pass in on vlan40 from 172.16.40.0/27 to any
+
+  - path: /etc/sysctl.conf
+    content: |
+      net.inet.ip.forwarding=1
+
+  - path: /etc/resolv.conf
+    content: |
+      nameserver 192.168.119.2
+      #nameserver 8.8.8.8  # DNS secondaire

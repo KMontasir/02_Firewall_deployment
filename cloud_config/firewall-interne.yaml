@@ -1,0 +1,70 @@
+#cloud-config
+hostname: "firewall-interne"
+
+users:
+  - name: admin
+    gecos: "Admin User"
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    shell: /bin/sh
+    lock-passwd: false
+    passwd: "$6$b9T6gEnQwVvxM5gV$MIecEzUmOUeJFs4Z/BCKDcbowu0s/0qgVFqLoL3ZEYs18ik6JFBsBXZsXKiu.UuLEKd9VlttjkUh/XSpj90d6/"
+
+write_files:
+  - path: /etc/rc.conf
+    content: |
+      # Interfaces configuration
+      ifconfig_vtnet0="inet 172.16.30.29 netmask 255.255.255.224" # WAN (vmbr2)
+      ifconfig_vtnet1="inet 172.16.1.8 netmask 255.255.255.0" # LAN (vmbr4)
+      ifconfig_vtnet2="up"
+      
+      # VLAN Configuration (OPT1)
+      vlan5="vlan 5 vlandev vtnet2"
+      ifconfig_vlan5="inet 172.16.5.254 netmask 255.255.255.0" # VLAN 5 (OPT1 vmbr3)
+      
+      vlan10="vlan 10 vlandev vtnet2"
+      ifconfig_vlan10="inet 172.16.10.254 netmask 255.255.255.0" # VLAN 10 (OPT1 vmbr3)
+      
+      vlan20="vlan 20 vlandev vtnet2"
+      ifconfig_vlan20="inet 172.16.20.30 netmask 255.255.255.224" # VLAN 20 (OPT1 vmbr3)
+
+      # Passerelles
+      defaultrouter="172.16.30.30"  # Passerelle pour le WAN
+
+      # Enable NAT and Firewall
+      gateway_enable="YES"
+      pf_enable="YES"
+
+      # Configuration des routes statiques persistantes
+      static_routes="route1 route2 route3"
+      route_route1="-net 172.16.40.0/27 172.16.30.30"
+      route_route2="-net 172.16.50.0/28 172.16.30.30"
+      route_route3="-net 172.16.60.0/28 172.16.30.30"
+
+  - path: /etc/pf.conf
+    content: |
+      # Options globales
+      set skip on lo
+
+      # Normalisation
+      scrub in all
+
+      # NAT (Traduction)
+      nat on vtnet0 from 172.16.1.0/24 to any -> (vtnet0)
+      nat on vtnet0 from 172.16.5.0/24 to any -> (vtnet0)
+      nat on vtnet0 from 172.16.10.0/24 to any -> (vtnet0)
+      nat on vtnet0 from 172.16.20.0/27 to any -> (vtnet0)
+
+      # Règles de filtrage
+      pass in on vtnet1 from 172.16.1.0/24 to any
+      pass in on vlan5 from 172.16.5.0/24 to any
+      pass in on vlan10 from 172.16.10.0/24 to any
+      pass in on vlan20 from 172.16.20.0/27 to any
+
+  - path: /etc/sysctl.conf
+    content: |
+      net.inet.ip.forwarding=1
+
+  - path: /etc/resolv.conf
+    content: |
+      nameserver 192.168.119.2
+      #nameserver 8.8.8.8  # DNS secondaire

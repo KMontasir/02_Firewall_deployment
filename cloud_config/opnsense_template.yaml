@@ -1,0 +1,43 @@
+#cloud-config
+hostname: opnsense-template
+fqdn: opnsense-template.local
+manage_etc_hosts: true
+
+# Configuration de l'utilisateur admin avec /bin/sh
+users:
+  - name: admin
+    gecos: "Admin User"
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    shell: /bin/sh
+    lock-passwd: false
+    passwd: "$6$b9T6gEnQwVvxM5gV$MIecEzUmOUeJFs4Z/BCKDcbowu0s/0qgVFqLoL3ZEYs18ik6JFBsBXZsXKiu.UuLEKd9VlttjkUh/XSpj90d6/"
+
+# Autoriser l'authentification SSH par mot de passe
+ssh_pwauth: true
+
+# Commandes pour configurer le réseau et redémarrer les services
+runcmd:
+  # Configuration de l'interface réseau vtnet0
+  - echo 'ifconfig_vtnet0="inet 192.168.119.130 netmask 255.255.255.0"' >> /etc/rc.conf
+  - echo 'defaultrouter="192.168.119.2"' >> /etc/rc.conf
+
+  # Configuration DNS
+  - echo 'nameserver 192.168.119.2' > /etc/resolv.conf
+
+  # Redémarrer les services réseau pour appliquer la configuration
+  - service netif restart
+  - service routing restart
+  
+  # Vérifier la connectivité réseau
+  - ping -c 4 8.8.8.8
+
+  # Déverrouillez les packages
+  - pkg unlock -ya
+
+  # Supprimez tous les anciens packages
+  - pkg delete -fa
+  - rm -rf /var/db/pkg/*
+  
+  # Télécharger et exécuter le script de bootstrap d'OPNsense
+  - fetch -o /root/opnsense-bootstrap.sh.in https://raw.githubusercontent.com/opnsense/update/master/src/bootstrap/opnsense-bootstrap.sh.in
+  - sh /root/opnsense-bootstrap.sh.in -r 25.1 -y
